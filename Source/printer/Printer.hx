@@ -67,6 +67,8 @@ class Printer {
                 out += printBinaryOperation(node);
             case NodeType.UnaryOp:
                 out += printUnaryOperation(node);
+            case NodeType.Return:
+                out += printReturn(node);
             case NodeType.FunctionDeclNativeBody:
                 out += node.value;
             case NodeType.StringLiteral:
@@ -137,6 +139,10 @@ class Printer {
     public function printUnaryOperation(node: Node): String {
         var op: String = node.value;
         return '${op}${printChildren(node, true)}';
+    }
+
+    public function printReturn(node: Node): String {
+        return 'return ${printChildren(node, true)};';
     }
 
     public function printFunctionDecl(node: Node, indent: Int): String {

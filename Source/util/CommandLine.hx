@@ -40,7 +40,7 @@ class CommandLine {
             }
         }
 
-        Logging.print("ALCL 0.0.1 - a toy language and compiler by mikaib");
+        Logging.print("ALCL 0.0.1 - a toy language and tokenizer by mikaib");
     }
 
     public function printHelp(): Void {

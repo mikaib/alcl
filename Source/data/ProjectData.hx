@@ -1,6 +1,6 @@
 package data;
 import util.Logging;
-import compiler.Tokenizer;
+import tokenizer.Tokenizer;
 import sys.FileSystem;
 import errors.ErrorContainer;
 import errors.ErrorType;
@@ -288,6 +288,7 @@ class ProjectData {
             var parser = new Parser(tokenizer);
 
             parser.parse();
+            //parser.printDotFile();
             _parserMap[file] = parser;
 
             if (baseLocOf(file) != "alcl/global" && parser.doesWantGlobalLib()) { // making sure primitive types and runtime libs are there.
@@ -301,6 +302,10 @@ class ProjectData {
         // typer + verifier
         for (file in _files) {
             var parser = _parserMap[file];
+            if (parser == null) {
+                Logging.warn('Missing parser for file "$file"');
+                return;
+            }
             var imports = parser.getLibRequirements();
             for (imp in imports) {
                 var resolved = resolveImport(imp);
@@ -318,6 +323,10 @@ class ProjectData {
         // print ASTs
         for (file in _files) {
             var parser = _parserMap[file];
+            if (parser == null) {
+                Logging.warn('Missing parser for file "$file"');
+                return;
+            }
             var printer = new Printer(parser, this);
             var baseLoc = removeTrailingOrLeadingSlashes(StringTools.replace(StringTools.replace(file.split('.alcl').join(''), _rootDirectory, ""), "\\", "/"));
             if (!_dumpAst) {

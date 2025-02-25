@@ -1,4 +1,4 @@
-package compiler;
+package tokenizer;
 
 import util.Logging;
 

@@ -1,8 +1,8 @@
 package ast;
 
-import compiler.Token;
-import compiler.Tokenizer;
-import compiler.TokenType;
+import tokenizer.Token;
+import tokenizer.Tokenizer;
+import tokenizer.TokenType;
 import util.Logging;
 
 class ParserContext {
@@ -68,7 +68,7 @@ class ParserContext {
             var next = next();
             if (next.type == start) {
                 depth++;
-            }
+            } // t
 
             if (next.type == end) {
                 depth--;
@@ -544,6 +544,17 @@ class ParserContext {
         addNode(whileNode);
     }
 
+    public function parseReturn(token: Token): Void {
+        prev();
+        var tokens: Array<Token> = getTokenArrayDelim(TokenType.Null, TokenType.Semicolon, 1);
+        var returnNode: Node = createNode(NodeType.Return);
+
+        var returnCtx: ParserContext = new ParserContext(tokens, _parser, returnNode);
+        returnCtx.parse();
+
+        addNode(returnNode);
+    }
+
     public function parseIdentifier(token: Token): Void {
         switch (token.value) {
             case "func":
@@ -554,6 +565,8 @@ class ParserContext {
                 parseVarDef(token);
             case "while":
                 parseWhileLoop(token);
+            case "return":
+                parseReturn(token);
             default:
                 if (hasNext()) {
                     var _peekNext = peekNext();

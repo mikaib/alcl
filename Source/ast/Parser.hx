@@ -1,8 +1,8 @@
 package ast;
 
-import compiler.Tokenizer;
-import compiler.TokenType;
-import compiler.Token;
+import tokenizer.Tokenizer;
+import tokenizer.TokenType;
+import tokenizer.Token;
 import util.Logging;
 import errors.ErrorContainer;
 import errors.ErrorType;
@@ -125,6 +125,8 @@ class Parser {
                 case NodeType.VarDef, NodeType.VarType, NodeType.VarAssign, NodeType.VarValue: "lightyellow";
                 case NodeType.StringLiteral, NodeType.NumberLiteral, NodeType.Identifier: "lightgray";
                 case NodeType.WhileLoop, NodeType.WhileLoopCond, NodeType.WhileLoopBody: "lightpink";
+                case NodeType.SubExpression: "lightgoldenrodyellow";
+                case NodeType.Return: "lightseagreen";
                 case NodeType.BinaryOp, NodeType.UnaryOp, NodeType.OperationLeft, NodeType.OperationRight: "lightcyan";
                 default: "white";
             };
@@ -142,7 +144,7 @@ class Parser {
 
         function isSubgraphNode(nodeType: NodeType): Bool {
             return switch (nodeType) {
-                case NodeType.FunctionDeclBody, NodeType.FunctionDeclNativeBody, NodeType.VarValue, NodeType.WhileLoopBody, NodeType.WhileLoopCond, ast.NodeType.FunctionCallParam: true;
+                case NodeType.FunctionDeclBody, NodeType.FunctionDeclNativeBody, NodeType.VarValue, NodeType.SubExpression, NodeType.WhileLoopBody, NodeType.WhileLoopCond, ast.NodeType.FunctionCallParam: true;
                 default: false;
             };
         }

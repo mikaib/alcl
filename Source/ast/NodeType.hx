@@ -26,4 +26,5 @@ enum NodeType {
     OperationLeft;
     OperationRight;
     SubExpression;
+    Return;
 }

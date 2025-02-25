@@ -9,7 +9,7 @@ class Main {
     public static function getFilesRecursive(directory: String, addTo: Array<String>) {
         var files = sys.FileSystem.readDirectory(directory);
         for (file in files) {
-            var path = Path.join([directory, file]);
+            var path = directory + '/' + file;
             if (sys.FileSystem.isDirectory(path)) {
                 getFilesRecursive(path, addTo);
             } else {

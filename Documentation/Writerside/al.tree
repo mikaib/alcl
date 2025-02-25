@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE instance-profile
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
+
+<instance-profile id="al"
+                 name="ALCL Language"
+                  start-page="Hello-World.md">
+
+    <toc-element topic="Hello-World.md"/>
+</instance-profile>

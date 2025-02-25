@@ -1,4 +1,4 @@
-package compiler;
+package tokenizer;
 
 @:structInit
 class Token {
