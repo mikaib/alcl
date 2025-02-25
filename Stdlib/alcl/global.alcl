@@ -5,6 +5,6 @@
 #ctype UInt64 "unsigned long long"
 #ctype Float32 "float"
 #ctype Float64 "double"
-#ctype Bool "bool"
+#ctype Bool "unsigned char"
 #ctype Byte "unsigned char"
 #ctype Void "void"

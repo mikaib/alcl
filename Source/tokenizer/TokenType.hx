@@ -33,5 +33,10 @@ enum TokenType {
     LessEqual;
     GreaterEqual;
     NotEqual;
+    Not; // TODO: implement this
+    BitwiseAnd; // TODO: implement this
+    BitwiseOr; // TODO: implement this
+    BitwiseXor; // TODO: implement this
+    BitwiseNot; // TODO: implement this
 }
 

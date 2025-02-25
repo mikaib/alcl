@@ -68,7 +68,7 @@ class ParserContext {
             var next = next();
             if (next.type == start) {
                 depth++;
-            } // t
+            }
 
             if (next.type == end) {
                 depth--;
@@ -405,6 +405,7 @@ class ParserContext {
         var precedence: Int = getPrecedence(op.type);
         var left: Node = popLastNode();
 
+        // TODO: The "Not" and "BitwiseNot" must always be unary.
         if (left == null) {
             var unaryNode = createNode(NodeType.UnaryOp, null, null, null, op.value);
 
@@ -505,24 +506,23 @@ class ParserContext {
         }
     }
 
-
     public function isOperator(t: Token): Bool {
         return getPrecedence(t.type) > 0;
     }
 
-    public function parseWhileLoop(token: Token): Void {
-        var whileNode = createNode(NodeType.WhileLoop, token, null, null);
+    public function parseConditionBodyKind(nodeType: NodeType, bodyType: NodeType, condType: NodeType, token: Token): Void {
+        var node = createNode(nodeType, token, null, null);
 
         if (!hasNextOfType(TokenType.LeftParen)) return;
         var conditionTokens: Array<Token> = getTokenArrayDelim(TokenType.LeftParen, TokenType.RightParen);
         var conditionNode = createNode(
-            NodeType.WhileLoopCond,
+            condType,
             conditionTokens[0],
             conditionTokens[conditionTokens.length - 1],
-            whileNode
+            node
         );
 
-        whileNode.children.push(conditionNode);
+        node.children.push(conditionNode);
 
         var conditionCtx: ParserContext = new ParserContext(conditionTokens, _parser, conditionNode);
         conditionCtx.parse();
@@ -530,18 +530,18 @@ class ParserContext {
         if (!hasNextOfType(TokenType.LeftBrace)) return;
         var bodyTokens: Array<Token> = getTokenArrayDelim(TokenType.LeftBrace, TokenType.RightBrace);
         var bodyNode = createNode(
-            NodeType.WhileLoopBody,
+            bodyType,
             bodyTokens[0],
             bodyTokens[bodyTokens.length - 1],
-            whileNode
+            node
         );
 
-        whileNode.children.push(bodyNode);
+        node.children.push(bodyNode);
 
         var bodyCtx: ParserContext = new ParserContext(bodyTokens, _parser, bodyNode);
         bodyCtx.parse();
 
-        addNode(whileNode);
+        addNode(node);
     }
 
     public function parseReturn(token: Token): Void {
@@ -555,6 +555,25 @@ class ParserContext {
         addNode(returnNode);
     }
 
+    public function parseElse(token: Token): Void {
+        if (!hasNextOfType(TokenType.LeftBrace)) return;
+        var elseNode: Node = createNode(NodeType.IfStatementElse, token, null, null);
+
+        var bodyTokens: Array<Token> = getTokenArrayDelim(TokenType.LeftBrace, TokenType.RightBrace);
+        var bodyNode = createNode(
+            NodeType.IfStatementBody,
+            bodyTokens[0],
+            bodyTokens[bodyTokens.length - 1],
+            elseNode
+        );
+        elseNode.children.push(bodyNode);
+
+        var bodyCtx: ParserContext = new ParserContext(bodyTokens, _parser, bodyNode);
+        bodyCtx.parse();
+
+        addNode(elseNode);
+    }
+
     public function parseIdentifier(token: Token): Void {
         switch (token.value) {
             case "func":
@@ -563,10 +582,25 @@ class ParserContext {
                 parseImport(token, true);
             case "var":
                 parseVarDef(token);
-            case "while":
-                parseWhileLoop(token);
             case "return":
                 parseReturn(token);
+            case "if":
+                parseConditionBodyKind(NodeType.IfStatement, NodeType.IfStatementBody, NodeType.IfStatementCond, token);
+            case "else":
+                if (hasNext() && peekNext().value == "if") {
+                    next();
+                    parseConditionBodyKind(NodeType.IfStatementElseIf, NodeType.IfStatementBody, NodeType.IfStatementCond, token);
+                } else {
+                    parseElse(token);
+                }
+            case "while":
+                parseConditionBodyKind(NodeType.WhileLoop, NodeType.WhileLoopBody, NodeType.WhileLoopCond, token);
+            case "continue":
+                doExactConversion(token, NodeType.WhileLoopContinue);
+            case "break":
+                doExactConversion(token, NodeType.WhileLoopBreak);
+            case "true" | "false":
+                doExactConversion(token, NodeType.BooleanLiteral);
             default:
                 if (hasNext()) {
                     var _peekNext = peekNext();
@@ -688,18 +722,27 @@ class ParserContext {
                 return 1;
             case TokenType.And:
                 return 2;
-            case TokenType.Equal | TokenType.NotEqual:
+            case TokenType.BitwiseOr:
                 return 3;
-            case TokenType.Less | TokenType.LessEqual | TokenType.Greater | TokenType.GreaterEqual:
+            case TokenType.BitwiseXor:
                 return 4;
-            case TokenType.Plus | TokenType.Minus:
+            case TokenType.BitwiseAnd:
                 return 5;
-            case TokenType.Star | TokenType.Slash | TokenType.Percent:
+            case TokenType.Equal | TokenType.NotEqual:
                 return 6;
+            case TokenType.Less | TokenType.LessEqual | TokenType.Greater | TokenType.GreaterEqual:
+                return 7;
+            case TokenType.Plus | TokenType.Minus:
+                return 8;
+            case TokenType.Star | TokenType.Slash | TokenType.Percent:
+                return 9;
+            case TokenType.Not | TokenType.BitwiseNot:
+                return 10;
             default:
                 return 0;
         }
     }
+
 
     public function parse(): ParserContext {
         while (true) {

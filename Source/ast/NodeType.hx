@@ -17,10 +17,18 @@ enum NodeType {
     VarValue;
     StringLiteral;
     NumberLiteral;
+    BooleanLiteral;
     Identifier;
     WhileLoop;
     WhileLoopCond;
     WhileLoopBody;
+    WhileLoopBreak;
+    WhileLoopContinue;
+    IfStatement;
+    IfStatementElse;
+    IfStatementElseIf;
+    IfStatementCond;
+    IfStatementBody;
     UnaryOp;
     BinaryOp;
     OperationLeft;

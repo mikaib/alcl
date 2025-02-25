@@ -58,14 +58,55 @@ class Tokenizer {
                     line++;
                     column = 1;
                     i++;
-
-                    if (tokens.length > 0) {
-                        var lastToken = tokens[tokens.length - 1];
-                        if (lastToken.type != TokenType.Semicolon && !inlineTokenizer) {
-                            tokens.push({ type: TokenType.Semicolon, value: ';', line: line, column: column, index: i });
-                        }
-                    }
                     continue;
+
+                case '>':
+                    if (i + 1 < code.length && code.charAt(i + 1) == '=') {
+                        tokens.push({ type: TokenType.GreaterEqual, value: '>=', line: line, column: column, index: i });
+                        column += 2;
+                        i++;
+                    } else {
+                        tokens.push({ type: TokenType.Greater, value: c, line: line, column: column, index: i });
+                        column++;
+                    }
+
+                case '<':
+                    if (i + 1 < code.length && code.charAt(i + 1) == '=') {
+                        tokens.push({ type: TokenType.LessEqual, value: '<=', line: line, column: column, index: i });
+                        column += 2;
+                        i++;
+                    } else {
+                        tokens.push({ type: TokenType.Less, value: c, line: line, column: column, index: i });
+                        column++;
+                    }
+
+                case '&':
+                    if (i + 1 < code.length && code.charAt(i + 1) == '&') {
+                        tokens.push({ type: TokenType.And, value: '&&', line: line, column: column, index: i });
+                        column += 2;
+                        i++;
+                    } else {
+                        tokens.push({ type: TokenType.BitwiseAnd, value: c, line: line, column: column, index: i });
+                        column++;
+                    }
+
+                case '|':
+                    if (i + 1 < code.length && code.charAt(i + 1) == '|') {
+                        tokens.push({ type: TokenType.Or, value: '||', line: line, column: column, index: i });
+                        column += 2;
+                        i++;
+                    } else {
+                        tokens.push({ type: TokenType.BitwiseOr, value: c, line: line, column: column, index: i });
+                        column++;
+                    }
+
+                case '^':
+                    tokens.push({ type: TokenType.BitwiseXor, value: c, line: line, column: column, index: i });
+                    column++;
+
+                case '~':
+                    tokens.push({ type: TokenType.BitwiseNot, value: c, line: line, column: column, index: i });
+                    column++;
 
                 case '(':
                     tokens.push({ type: TokenType.LeftParen, value: c, line: line, column: column, index: i });
@@ -116,11 +157,15 @@ class Tokenizer {
                         var j = i + 2;
                         while (j < code.length) {
                             var c2 = code.charAt(j);
-                            if (c2 == '\n') {
+                            if (c2 == '\n' || c2 == '\r') {
+                                while (j < code.length && (code.charAt(j) == '\n' || code.charAt(j) == '\r')) {
+                                    j++;
+                                }
                                 break;
                             }
                             j++;
                         }
+
                         line += 1;
                         column = 1;
                         i = j;
@@ -156,7 +201,18 @@ class Tokenizer {
                         column++;
                     }
 
+                case '!':
+                    if (i + 1 < code.length && code.charAt(i + 1) == '=') {
+                        tokens.push({ type: TokenType.NotEqual, value: '!=', line: line, column: column, index: i });
+                        column += 2;
+                        i++;
+                    } else {
+                        tokens.push({ type: TokenType.Not, value: c, line: line, column: column, index: i });
+                        column++;
+                    }
+
                 case '"':
+
                     var startIdx = i;
                     var quoteType = c;
                     i++;

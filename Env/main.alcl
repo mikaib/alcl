@@ -1,13 +1,12 @@
 need "alcl/compiler_testing"
 need "io"
 
-func main(): Void {
-    var i: Int32 = 0;
-
-    while (i < 10) {
-        println("ello")
-        i = i + 1
+func main(): Int32 {
+    if (a == b) {
+        println("a == b")
+    } else if (c == d) {
+        println("c == d")
+    } else {
+        println("a != b and c != d")
     }
-
-    alcl_test_int("While Loop", i, 10)
 }

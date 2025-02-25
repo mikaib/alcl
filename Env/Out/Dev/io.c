@@ -7,10 +7,10 @@
 #include "stdio.h"
 #endif // INCLUDE_d6563ee84dfb2373f031176fbe02d8c4
 
-#ifndef ALCL_ad14e1535988300604fc36d053eec0fd
-#define ALCL_ad14e1535988300604fc36d053eec0fd
+#ifndef ALCL_89a8978523a7eeb9fc75cd33c32358c2
+#define ALCL_89a8978523a7eeb9fc75cd33c32358c2
 #include "alcl/global.c"
-#endif // ALCL_ad14e1535988300604fc36d053eec0fd
+#endif // ALCL_89a8978523a7eeb9fc75cd33c32358c2
 
 ALCL_FUNC void println(char* s) {
     printf("%s\n", s);

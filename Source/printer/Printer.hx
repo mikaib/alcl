@@ -6,6 +6,7 @@ import haxe.crypto.Md5;
 import typer.Typer;
 import data.ProjectData;
 import util.Logging;
+import util.FsUtil;
 
 class Printer {
 
@@ -13,12 +14,14 @@ class Printer {
     private var _parser: Parser;
     private var _types: Typer;
     private var _project: ProjectData;
+    private var _baseLocDir: String;
 
-    public function new(parser: Parser, project: ProjectData) {
+    public function new(parser: Parser, project: ProjectData, baseLocDir: String = "") {
         _root = parser.getRoot();
         _types = parser.getTypes();
         _project = project;
         _parser = parser;
+        _baseLocDir = baseLocDir;
     }
 
     public function print(): String {
@@ -36,7 +39,7 @@ class Printer {
             }
 
             var hash = Md5.encode(resolved);
-            headers += '#ifndef ALCL_${hash}\n#define ALCL_${hash}\n#include "${lib}.c"\n#endif // ALCL_${hash}\n\n';
+            headers += '#ifndef ALCL_${hash}\n#define ALCL_${hash}\n#include "${FsUtil.resolvePath(_baseLocDir, lib)}.c"\n#endif // ALCL_${hash}\n\n';
         }
 
         var code = printChildren(_root);
@@ -63,12 +66,26 @@ class Printer {
                 out += printWhileLoop(node, indent);
             case NodeType.WhileLoopBody:
                 out += printChildren(node);
+            case NodeType.IfStatement:
+                out += printIfStatement(node, indent);
+            case NodeType.IfStatementElseIf:
+                out += printElseIfStatement(node, indent);
+            case NodeType.IfStatementElse:
+                out += printElseStatement(node, indent);
+            case NodeType.IfStatementBody:
+                out += printChildren(node);
+            case NodeType.WhileLoopBreak:
+                out += 'break;\n';
+            case NodeType.WhileLoopContinue:
+                out += 'continue;\n';
             case NodeType.BinaryOp:
                 out += printBinaryOperation(node);
             case NodeType.UnaryOp:
                 out += printUnaryOperation(node);
             case NodeType.Return:
                 out += printReturn(node);
+            case NodeType.BooleanLiteral:
+                out += node.value == "true" ? "1" : "0";
             case NodeType.FunctionDeclNativeBody:
                 out += node.value;
             case NodeType.StringLiteral:
@@ -142,7 +159,7 @@ class Printer {
     }
 
     public function printReturn(node: Node): String {
-        return 'return ${printChildren(node, true)};';
+        return 'return ${printChildren(node, true)};\n';
     }
 
     public function printFunctionDecl(node: Node, indent: Int): String {
@@ -218,6 +235,58 @@ class Printer {
         }
 
         return '${node.value} = ${printChildren(value, true)};\n';
+    }
+
+    public function printIfStatement(node: Node, indent: Int): String {
+        var body: Node = findChildOfType(node, NodeType.IfStatementBody);
+        if (body == null) {
+            body = {
+                type: NodeType.IfStatementBody,
+                value: null
+            };
+        }
+
+        var condition = findChildOfType(node, NodeType.IfStatementCond);
+        if (condition == null) {
+            condition = {
+                type: NodeType.IfStatementCond,
+                value: null
+            };
+        }
+
+        return 'if (${printChildren(condition)}) {\n${replaceLast(printNode(body, indent + 1), "\n", "")}\n}\n';
+    }
+
+    public function printElseIfStatement(node: Node, indent: Int): String {
+        var body: Node = findChildOfType(node, NodeType.IfStatementBody);
+        if (body == null) {
+            body = {
+                type: NodeType.IfStatementBody,
+                value: null
+            };
+        }
+
+        var condition = findChildOfType(node, NodeType.IfStatementCond);
+        if (condition == null) {
+            condition = {
+                type: NodeType.IfStatementCond,
+                value: null
+            };
+        }
+
+        return 'else if (${printChildren(condition)}) {\n${replaceLast(printNode(body, indent + 1), "\n", "")}\n}\n';
+    }
+
+    public function printElseStatement(node: Node, indent: Int): String {
+        var body: Node = findChildOfType(node, NodeType.IfStatementBody);
+        if (body == null) {
+            body = {
+                type: NodeType.IfStatementBody,
+                value: null
+            };
+        }
+
+        return 'else {\n${replaceLast(printNode(body, indent + 1), "\n", "")}\n}\n';
     }
 
     public function printWhileLoop(node: Node, indent: Int): String {

@@ -288,15 +288,12 @@ class ProjectData {
             var parser = new Parser(tokenizer);
 
             parser.parse();
-            //parser.printDotFile();
+            parser.print();
             _parserMap[file] = parser;
 
             if (baseLocOf(file) != "alcl/global" && parser.doesWantGlobalLib()) { // making sure primitive types and runtime libs are there.
                 parser.ensureRequirement("alcl/global");
             }
-            // Logging.info('- ${Path.join([file])}');
-            // parser.print();
-            // TODO: verification of AST (errors or resolving unresolved types)
         }
 
         // typer + verifier
@@ -327,8 +324,9 @@ class ProjectData {
                 Logging.warn('Missing parser for file "$file"');
                 return;
             }
-            var printer = new Printer(parser, this);
             var baseLoc = removeTrailingOrLeadingSlashes(StringTools.replace(StringTools.replace(file.split('.alcl').join(''), _rootDirectory, ""), "\\", "/"));
+            var baseLocDir = Path.directory(baseLoc);
+            var printer = new Printer(parser, this, baseLocDir);
             if (!_dumpAst) {
                 var output = printer.print();
                 var outputFilename = Path.join([_outputDirectory, baseLoc + '.c']);

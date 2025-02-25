@@ -1,0 +1,11 @@
+need "test_math"
+need "test_while"
+need "test_comparisons"
+
+func main(): Int32 {
+    test_math();
+    test_while();
+    test_comparisons();
+
+    return alcl_test_summary();
+}

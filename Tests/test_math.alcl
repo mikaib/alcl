@@ -5,6 +5,7 @@ func arithmetic(): Void {
     alcl_test_float("Arithmetic Subtraction", 10 - 3, 7);
     alcl_test_float("Arithmetic Multiplication", 4 * 2, 8);
     alcl_test_float("Arithmetic Division", 12 / 3, 4);
+    alcl_test_float("Arithmetic Subtraction Double", 10 -- 3, 13);
 }
 
 func negative(): Void {
@@ -73,8 +74,7 @@ func other() {
     alcl_test_float("Other 2",  (1.0 / ((10.0) * 10.0)), 0.01);
 }
 
-func main(): Int32 {
-    // Tests
+func test_math(): Void {
     arithmetic();
     negative();
     large();
@@ -87,7 +87,4 @@ func main(): Int32 {
     mixed_division_modulus();
     binop_vs_unaryop();
     other();
-
-    // Exit
-    return 0;
 }
