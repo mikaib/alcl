@@ -1,0 +1,25 @@
+{
+  "name": "alcl-lang",
+  "displayName": "ALCL",
+  "description": "ALCL Language support",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.97.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "alcl",
+      "aliases": ["ALCL", "alcl"],
+      "extensions": [".alcl"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "alcl",
+      "scopeName": "source.alcl",
+      "path": "./syntaxes/alcl.tmLanguage.json"
+    }]
+  }
+}

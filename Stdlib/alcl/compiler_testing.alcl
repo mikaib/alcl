@@ -1,0 +1,11 @@
+#native_function
+#native_header "stdio.h"
+#native_header "stdlib.h"
+func alcl_test_float64(name: CString, a: Float64, b: Float64): Void {
+    double error = 0.0000000000001;
+    if (a < b - error || a > b + error) {
+        printf("FAIL: %s (%f != %f)\n", name, a, b);
+    } else {
+        printf("PASS: %s\n", name);
+    }
+}

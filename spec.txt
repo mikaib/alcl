@@ -1,0 +1,21 @@
+api: io
+    - print(message: string): void
+api: gc
+    - collect(): void
+    - create<T>(type: Type<T>): T
+api: dynamic_array
+    - create<T>(type: Type<T>): DynamicArray<T>
+    - push<T>(array: DynamicArray<T>, value: T): void
+    - pop<T>(array: DynamicArray<T>): T
+    - insert<T>(array: DynamicArray<T>, index: int, value: T): void
+    - remove<T>(array: DynamicArray<T>, index: int): T
+    - get<T>(array: DynamicArray<T>, index: int): T
+    - set<T>(array: DynamicArray<T>, index: int, value: T): void
+    - length<T>(array: DynamicArray<T>): int
+    - clear<T>(array: DynamicArray<T>): void
+api: reflect/type
+    - getName(type: Type<T>): string
+    - getFields<T>(type: Type<T>): Array<Field>
+    - getMethods<T>(type: Type<T>): Array<Method>
+    - getConstructors<T>(type: Type<T>): Array<Constructor>
+api: reflect/field
