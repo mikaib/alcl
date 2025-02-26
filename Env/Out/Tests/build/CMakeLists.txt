@@ -1,5 +1,0 @@
-cmake_minimum_required(VERSION 3.10)
-project(CBuildProject)
-add_executable(output ../test_while.c ../tests.c ../alcl/global.c ../alcl/compiler_testing.c ../test_math.c ../test_comparisons.c ../io.c )
-include_directories(./)
-include_directories(./alcl)

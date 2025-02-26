@@ -1,3 +1,0 @@
-C:/projects/ALCL/Env/Out/Tests/build/CMakeFiles/output.dir
-C:/projects/ALCL/Env/Out/Tests/build/CMakeFiles/ALL_BUILD.dir
-C:/projects/ALCL/Env/Out/Tests/build/CMakeFiles/ZERO_CHECK.dir
