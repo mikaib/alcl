@@ -12,8 +12,10 @@ class Main {
         for (file in files) {
             var path = directory + '/' + file;
             if (sys.FileSystem.isDirectory(path)) {
+                trace('get files recur', Sys.getCwd(), path);
                 getFilesRecursive(path, addTo);
             } else {
+                trace('get files', Sys.getCwd(), path);
                 addTo.push(path);
             }
         }
