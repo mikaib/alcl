@@ -1,1 +1,14 @@
-./ALCL -cwd ./Tests -output ./Env/Out/Tests test_math.alcl test_while.alcl test_comparisons.alcl tests.alcl
+echo "Running tests..."
+echo "Current directory: $PWD"
+
+TEST_FILES=$(find ./Tests -type f)
+
+echo "Test files:"
+
+for file in $TEST_FILES do
+    echo $file
+done
+
+./ALCL -cwd ./Tests -output ./Env/Out/Tests $TEST_FILES
+
+echo "Tests complete."
