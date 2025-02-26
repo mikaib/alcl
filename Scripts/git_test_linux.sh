@@ -1,7 +1,9 @@
 echo "Running tests..."
 echo "Current directory: $PWD"
 
-TEST_FILES=$(find ./Tests -type f)
+cd ./Tests
+TEST_FILES=$(find . -type f)
+cd ..
 
 echo "Test files:"
 
