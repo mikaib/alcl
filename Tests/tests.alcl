@@ -7,6 +7,5 @@ func main(): Int32 {
     test_while();
     test_comparisons();
 
-    return 1;
-    // return alcl_test_summary();
+    return alcl_test_summary();
 }
