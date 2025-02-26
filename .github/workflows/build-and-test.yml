@@ -89,4 +89,4 @@ jobs:
       - name: Run Tests
         run: |
           cd ./Env/Out/Tests/build/Release
-          ./output.exe
+          output
