@@ -2,5 +2,7 @@
 -main Main
 
 -D analyzer-optimize
+-D HXCPP_STACK_TRACE
+-D HXCPP_STACK_LINE
 
 --cpp Binary/cpp

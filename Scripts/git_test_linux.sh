@@ -6,12 +6,10 @@ TEST_FILES=$(find . -type f | sed 's|^\./||')
 cd ..
 
 echo "Test files:"
-
 for file in $TEST_FILES
 do
-    echo "$file"
+    echo "- $file"
 done
 
 ./ALCL -cwd ./Tests -output ../Env/Out/Tests $TEST_FILES
-
-echo "Tests complete."
+echo "Tests generated!"

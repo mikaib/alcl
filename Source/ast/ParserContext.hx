@@ -743,7 +743,6 @@ class ParserContext {
         }
     }
 
-
     public function parse(): ParserContext {
         while (true) {
             if (!iter()) break;

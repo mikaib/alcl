@@ -20,6 +20,9 @@ class Main {
     }
 
     public static function main() {
+        cli_main();
+    }
+    public static function cli_main() {
         var project = new ProjectData();
 
         var cli = new CommandLine();
