@@ -15,6 +15,7 @@ class Printer {
     private var _types: Typer;
     private var _project: ProjectData;
     private var _baseLocDir: String;
+    private var _funcDefs: Array<String> = [];
 
     public function new(parser: Parser, project: ProjectData, baseLocDir: String = "") {
         _root = parser.getRoot();
@@ -22,13 +23,39 @@ class Printer {
         _project = project;
         _parser = parser;
         _baseLocDir = baseLocDir;
+        _funcDefs = [];
+    }
+
+    public function printHeaderFile(baseLoc: String): String {
+        var hash = Md5.encode(baseLoc);
+        var headers = '#ifndef ALCL_${hash}\n#define ALCL_${hash}\n\n';
+
+        for (lib in _parser.getLibRequirements()) {
+            var resolved = _project.resolveImport(lib);
+            if (resolved == null) {
+                Logging.debug('Unresolved import: ${lib}');
+                continue;
+            }
+
+            headers += '#include "${FsUtil.resolvePath(_baseLocDir, lib)}.h"\n';
+        }
+
+        var code = "";
+        for (funcDef in _funcDefs) {
+            code += funcDef;
+        }
+
+        var res = headers + "\n" + code + '\n#endif // ALCL_${hash}\n';
+
+        return res;
     }
 
     public function print(): String {
-        var headers = "#ifndef ALCL_FUNC\n#define ALCL_FUNC\n#endif // ALCL_FUNC\n\n";
+        _funcDefs.resize(0);
+
+        var headers = '';
         for (header in _parser.getHeaders()) {
-            var hash = Md5.encode(header);
-            headers += '#ifndef INCLUDE_${hash}\n#define INCLUDE_${hash}\n#include "${header}"\n#endif // INCLUDE_${hash}\n\n';
+            headers += '#include "${header}"\n';
         }
 
         for (lib in _parser.getLibRequirements()) {
@@ -38,12 +65,11 @@ class Printer {
                 continue;
             }
 
-            var hash = Md5.encode(resolved);
-            headers += '#ifndef ALCL_${hash}\n#define ALCL_${hash}\n#include "${FsUtil.resolvePath(_baseLocDir, lib)}.c"\n#endif // ALCL_${hash}\n\n';
+            headers += '#include "${FsUtil.resolvePath(_baseLocDir, lib)}.h"\n';
         }
 
         var code = printChildren(_root);
-        var res = headers + code;
+        var res = headers + "\n" + code;
 
         return res;
     }
@@ -173,7 +199,9 @@ class Printer {
         }
         paramStr = paramStr.substr(0, paramStr.length - 2);
 
-        var prefix = node.value != "main" ? "ALCL_FUNC " : "";
+        _funcDefs.push('${_types.convertTypeAlclToC(returnType)} ${node.value}(${paramStr});\n');
+
+        var prefix = "";
         var body = findChildOfType(node, NodeType.FunctionDeclBody);
         if (body != null) {
             return '${prefix}${_types.convertTypeAlclToC(returnType)} ${node.value}(${paramStr}) {\n${replaceLast(printNode(body, indent + 1), "\n", "")}\n}\n\n';
@@ -183,6 +211,7 @@ class Printer {
         if (nativeBody != null) {
             return '${prefix}${_types.convertTypeAlclToC(returnType)} ${node.value}(${paramStr}) {${nativeBody.value}}\n\n';
         }
+
         return "";
     }
 

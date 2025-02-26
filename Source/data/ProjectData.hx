@@ -138,6 +138,13 @@ class ProjectData {
     }
 
     /**
+     * Set the built file map
+     */
+    public function setBuiltFileMap(map: Map<String, Bool>): Void {
+        _builtFileMap = map;
+    }
+
+    /**
      * Get the parser map
      */
     public function getParserMap(): Map<String, Parser> {
@@ -259,6 +266,7 @@ class ProjectData {
             dependency.setAstMap(_astMap);
             dependency.setDumpAst(_dumpAst);
             dependency.setParserMap(_parserMap);
+            dependency.setBuiltFileMap(_builtFileMap);
             dependency.build(true);
         }
 
@@ -288,7 +296,7 @@ class ProjectData {
             var parser = new Parser(tokenizer);
 
             parser.parse();
-            parser.print();
+            // parser.print();
             _parserMap[file] = parser;
 
             if (baseLocOf(file) != "alcl/global" && parser.doesWantGlobalLib()) { // making sure primitive types and runtime libs are there.
@@ -328,10 +336,16 @@ class ProjectData {
             var baseLocDir = Path.directory(baseLoc);
             var printer = new Printer(parser, this, baseLocDir);
             if (!_dumpAst) {
-                var output = printer.print();
-                var outputFilename = Path.join([_outputDirectory, baseLoc + '.c']);
-                createDirectoryRecursive(Path.directory(outputFilename));
-                File.saveContent(outputFilename, output);
+                var outputC = printer.print();
+                var outputH = printer.printHeaderFile(baseLoc);
+                var outputFilenameC = Path.join([_outputDirectory, baseLoc + '.c']);
+                var outputFilenameH = Path.join([_outputDirectory, baseLoc + '.h']);
+
+                createDirectoryRecursive(Path.directory(outputFilenameC));
+                File.saveContent(outputFilenameC, outputC);
+                File.saveContent(outputFilenameH, outputH);
+
+                _builtFileMap[baseLoc] = true;
             } else {
                 _astMap[baseLoc] = parser.getRoot().deepCopy(false);
             }

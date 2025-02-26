@@ -4,6 +4,8 @@ import haxe.io.Path;
 import errors.ErrorContainer;
 import errors.ErrorType;
 import sys.FileSystem;
+import cbuild.CMakeInterface;
+import cbuild.CBuild;
 
 class Main {
 
@@ -27,9 +29,11 @@ class Main {
         var project = new ProjectData();
 
         var cli = new CommandLine();
+        var compileUsing: String = "";
         cli.addOption("output", "Basics", "Set the output location", value -> project.setOutputDirectory(value));
         cli.addOption("cwd", "Basics", "Set the current working directory", value -> project.setWorkingDirectory(value));
         cli.addOption("verbose", "Basics", "Enable verbose logging", value -> project.setVerbose(true));
+        cli.addOption("compile", "Basics", "Compile the project with the specified build tool", value -> compileUsing = value);
         cli.addOption("std", "Advanced", "Set the directory of the standard library", value -> project.setStdLibDirectory(value));
         cli.addOption("ast", "Advanced", "Output the AST of the entire project", value -> project.setDumpAst(true));
         cli.parse();
@@ -77,6 +81,23 @@ class Main {
 
         errors.printErrors(true);
         project.build();
+
+        if (compileUsing == "") {
+            return;
+        }
+
+        var compiler: CBuild = null;
+        switch (compileUsing) {
+            case "cmake":
+                compiler = new CMakeInterface(project);
+        }
+
+        if (compiler != null) {
+            for (file in project.getBuiltFileMap().keys()) {
+                compiler.addFile('$file.c');
+            }
+            compiler.compile();
+        }
     }
 
 }
