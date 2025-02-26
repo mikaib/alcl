@@ -17,6 +17,8 @@ jobs:
         haxe-version: 4.3.1
     - name: Install hxcpp
       run: haxelib git hxcpp https://github.com/HaxeFoundation/hxcpp.git
+    - name: Build hxcpp
+      run: haxe /opt/hostedtoolcache/haxe/4.3.1/x64/lib/hxcpp/git/tools/hxcpp/compile.hxml
     - name: Build Compiler
       run: haxe Release.hxml
     - name: Move Compiler
@@ -38,6 +40,8 @@ jobs:
           haxe-version: 4.3.1
       - name: Install hxcpp
         run: haxelib git hxcpp https://github.com/HaxeFoundation/hxcpp.git
+      - name: Build hxcpp
+        run: haxe C:/hostedtoolcache/windows/haxe/4.3.1/x64/lib/hxcpp/git/tools/hxcpp/compile.hxml
       - name: Build Compiler
         run: haxe Release.hxml
       - name: Move Compiler
