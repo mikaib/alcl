@@ -8,15 +8,12 @@ import sys.FileSystem;
 class Main {
 
     public static function getFilesRecursive(directory: String, addTo: Array<String>) {
-        trace('read', Sys.getCwd(), directory);
         var files = sys.FileSystem.readDirectory(directory);
         for (file in files) {
             var path = directory + '/' + file;
             if (sys.FileSystem.isDirectory(path)) {
-                trace('get files recur', Sys.getCwd(), path);
                 getFilesRecursive(path, addTo);
             } else {
-                trace('get files', Sys.getCwd(), path);
                 addTo.push(path);
             }
         }
@@ -67,6 +64,7 @@ class Main {
         var stdFiles: Array<String> = [];
         if (!FileSystem.exists(project.getStdLibDirectory())) {
             errors.addError({ message: "Standard library directory does not exist", type: ErrorType.FileNotFound });
+            errors.printErrors(true);
         }
 
         for (stdFile in getFilesRecursive(project.getStdLibDirectory(), stdFiles)) {
