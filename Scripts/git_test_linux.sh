@@ -1,0 +1,1 @@
+./ALCL -cwd ./Tests -output ./Env/Out/Tests test_math.alcl test_while.alcl test_comparisons.alcl tests.alcl

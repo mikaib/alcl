@@ -49,4 +49,17 @@ jobs:
         with:
           name: alcl-windows
           path: ./ALCL.exe
-
+  run-tests-linux:
+    runs-on: ubuntu-latest
+    needs: build-linux
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v4
+      - name: Download compiled file
+        uses: actions/download-artifact@v4
+        with:
+          name: alcl-linux
+      - name: Generate Tests
+        run: bash ./Scripts/git_test_linux.sh
+      - name: File Tree
+        run: tree
