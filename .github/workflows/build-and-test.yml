@@ -67,7 +67,7 @@ jobs:
       - name: File Tree
         run: tree
       - name: Run Tests
-        run:
+        run: |
           cd ./Env/Out/Tests/build
           chmod +x ./output
           ./output
