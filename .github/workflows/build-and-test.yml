@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-linux:
 
     runs-on: ubuntu-latest
 
@@ -19,7 +19,14 @@ jobs:
         haxe-version: 4.3.1
     - name: Install hxcpp
       run: haxelib install hxcpp
-    - name: List Files
-      run: ls
     - name: Build Compiler
       run: haxe Release.hxml
+    - name: Move Compiler
+      run: mv ./Binary/cpp/Main ./ALCL
+    - name: List Files
+      run: ls
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: alcl-linux
+        path: ./ALCL
