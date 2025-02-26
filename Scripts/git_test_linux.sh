@@ -5,7 +5,8 @@ TEST_FILES=$(find ./Tests -type f)
 
 echo "Test files:"
 
-for file in $TEST_FILES do
+for file in $TEST_FILES
+do
     echo "$file"
 done
 
