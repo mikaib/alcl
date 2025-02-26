@@ -17,10 +17,10 @@
 #include "stdbool.h"
 #endif // INCLUDE_a7427bee4ed05162db8b3d016eee135f
 
-#ifndef ALCL_89a8978523a7eeb9fc75cd33c32358c2
-#define ALCL_89a8978523a7eeb9fc75cd33c32358c2
+#ifndef ALCL_b937d72d97e89725ee57655ef66362c4
+#define ALCL_b937d72d97e89725ee57655ef66362c4
 #include "./global.c"
-#endif // ALCL_89a8978523a7eeb9fc75cd33c32358c2
+#endif // ALCL_b937d72d97e89725ee57655ef66362c4
 
 int totalTests = 0;
 int passingTests = 0;

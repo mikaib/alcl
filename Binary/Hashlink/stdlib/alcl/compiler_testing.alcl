@@ -1,0 +1,58 @@
+var totalTests: Int32 = 0;
+var passingTests: Int32 = 0;
+var failingTests: Int32 = 0;
+
+#native_function
+#native_header "stdio.h"
+#native_header "stdlib.h"
+func alcl_test_float(name: CString, a: Float64, b: Float64): Void {
+    double error = 0.0000000000001;
+    totalTests = totalTests + 1;
+    if (a < b - error || a > b + error) {
+        failingTests = failingTests + 1;
+        printf("FAIL: %s (%f != %f)\n", name, a, b);
+    } else {
+        passingTests = passingTests + 1;
+        printf("PASS: %s\n", name);
+    }
+}
+
+#native_function
+#native_header "stdio.h"
+#native_header "stdlib.h"
+func alcl_test_int(name: CString, a: Int64, b: Int64): Void {
+    totalTests = totalTests + 1;
+    if (a != b) {
+        failingTests = failingTests + 1;
+        printf("FAIL: %s (%f != %f)\n", name, a, b);
+    } else {
+        passingTests = passingTests + 1;
+        printf("PASS: %s\n", name);
+    }
+}
+
+#native_function
+#native_header "stdio.h"
+#native_header "stdlib.h"
+#native_header "stdbool.h"
+func alcl_test_bool(name: CString, v: Bool): Void {
+    totalTests = totalTests + 1;
+    if (v == false) {
+        failingTests = failingTests + 1;
+        printf("FAIL: %s\n", name);
+    } else {
+        passingTests = passingTests + 1;
+        printf("PASS: %s\n", name);
+    }
+}
+
+#native_function
+#native_header "stdio.h"
+func alcl_test_summary(): Int32 {
+    printf("\n");
+    printf("Total tests: %d\n", totalTests);
+    printf("Passing tests: %d\n", passingTests);
+    printf("Failing tests: %d\n", failingTests);
+
+    return failingTests != 0;
+}

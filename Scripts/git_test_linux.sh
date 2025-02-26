@@ -2,7 +2,7 @@ echo "Running tests..."
 echo "Current directory: $PWD"
 
 cd ./Tests
-TEST_FILES=$(find . -type f)
+TEST_FILES=$(find . -type f | sed 's|^\./||')
 cd ..
 
 echo "Test files:"
@@ -12,6 +12,6 @@ do
     echo "$file"
 done
 
-./ALCL -cwd ./Tests -output ./Env/Out/Tests $TEST_FILES
+./ALCL -cwd ./Tests -output ../Env/Out/Tests $TEST_FILES
 
 echo "Tests complete."
