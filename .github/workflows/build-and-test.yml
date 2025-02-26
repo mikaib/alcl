@@ -91,4 +91,4 @@ jobs:
           cd ./Env/Out/Tests/build/Release
           ls
           pwd
-          output
+          ./output
