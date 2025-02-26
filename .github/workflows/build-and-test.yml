@@ -15,10 +15,12 @@ jobs:
       uses: krdlab/setup-haxe@v1.5.1
       with:
         haxe-version: 4.3.1
+    - name: Log current dir
+      run: pwd
     - name: Install hxcpp
       run: haxelib git hxcpp https://github.com/HaxeFoundation/hxcpp.git
     - name: Build hxcpp
-      run: haxe /opt/hostedtoolcache/haxe/4.3.1/x64/lib/hxcpp/git/tools/hxcpp/compile.hxml
+      run: cd /opt/hostedtoolcache/haxe/4.3.1/x64/lib/hxcpp/git/tools/hxcpp && haxe compile.hxml
     - name: Build Compiler
       run: haxe Release.hxml
     - name: Move Compiler
@@ -38,10 +40,12 @@ jobs:
         uses: krdlab/setup-haxe@v1.5.1
         with:
           haxe-version: 4.3.1
+      - name: Log current dir
+        run: pwd
       - name: Install hxcpp
         run: haxelib git hxcpp https://github.com/HaxeFoundation/hxcpp.git
       - name: Build hxcpp
-        run: haxe C:/hostedtoolcache/windows/haxe/4.3.1/x64/lib/hxcpp/git/tools/hxcpp/compile.hxml
+        run: cd C:/hostedtoolcache/windows/haxe/4.3.1/x64/lib/hxcpp/git/tools/hxcpp && haxe compile.hxml
       - name: Build Compiler
         run: haxe Release.hxml
       - name: Move Compiler
