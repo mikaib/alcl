@@ -3,6 +3,7 @@ import data.ProjectData;
 import haxe.io.Path;
 import errors.ErrorContainer;
 import errors.ErrorType;
+import sys.FileSystem;
 
 class Main {
 
@@ -51,14 +52,20 @@ class Main {
             }
         }
 
+
         var stdLib = new ProjectData();
         stdLib.setProjectName("StandardLibrary");
         stdLib.setRootDirectory(project.getStdLibDirectory());
 
         project.setProjectName("UserProject");
         project.addDependency(stdLib);
+        project.applyWorkingDirectory();
 
         var stdFiles: Array<String> = [];
+        if (!FileSystem.exists(project.getStdLibDirectory())) {
+            errors.addError({ message: "Standard library directory does not exist", type: ErrorType.FileNotFound });
+        }
+
         for (stdFile in getFilesRecursive(project.getStdLibDirectory(), stdFiles)) {
             stdLib.addFile(stdFile);
         }
@@ -68,7 +75,6 @@ class Main {
         }
 
         errors.printErrors(true);
-        project.applyWorkingDirectory();
         project.build();
     }
 
