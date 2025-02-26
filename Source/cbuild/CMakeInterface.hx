@@ -45,8 +45,6 @@ class CMakeInterface extends CBuild {
 
         File.saveContent(buildDir + "/CMakeLists.txt", cmakeContent.toString());
         Sys.setCwd(buildDir);
-        // Sys.command("cmake .");
-        // Sys.command("cmake --build . --config Release");
         var cmds: Array<String> = [
             "cmake .",
             "cmake --build . --config Release"
@@ -58,7 +56,6 @@ class CMakeInterface extends CBuild {
             var cmdName = cmdArgs.shift();
             var process = new Process(cmdName, cmdArgs);
             var err = process.stderr.readAll().toString();
-            Logging.print(process.stdout.readAll().toString());
 
             if (process.exitCode(true) != 0) {
                 Logging.print(process.stdout.readAll().toString());
