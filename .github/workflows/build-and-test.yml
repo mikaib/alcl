@@ -17,5 +17,7 @@ jobs:
       uses: krdlab/setup-haxe@v1.5.1
       with:
         haxe-version: 4.3.1
+    - name: list
+      run: ls
     - name: Build Compiler
       run: haxe Release.hxml

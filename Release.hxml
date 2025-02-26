@@ -1,0 +1,6 @@
+-cp Source
+-main Main
+
+-D analyzer-optimize
+
+--cpp Binary/cpp
