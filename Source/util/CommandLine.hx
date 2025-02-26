@@ -39,11 +39,10 @@ class CommandLine {
                 _optionCallbacks.get(key)(_parsed.get(key));
             }
         }
-
-        Logging.print("ALCL 0.0.1 - a toy language and tokenizer by mikaib");
     }
 
     public function printHelp(): Void {
+        Logging.print("ALCL 0.0.1 - a toy language and tokenizer by mikaib");
         Logging.print("Usage: alcl [options] [files]");
 
         for (category in _optionCategories.keys()) {

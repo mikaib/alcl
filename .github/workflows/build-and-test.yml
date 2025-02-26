@@ -15,8 +15,6 @@ jobs:
       uses: krdlab/setup-haxe@v1.5.1
       with:
         haxe-version: 4.3.1
-    - name: Log current dir
-      run: pwd
     - name: Install hxcpp
       run: haxelib git hxcpp https://github.com/HaxeFoundation/hxcpp.git
     - name: Build hxcpp
@@ -25,8 +23,6 @@ jobs:
       run: haxe Release.hxml
     - name: Move Compiler
       run: mv ./Binary/cpp/Main ./ALCL
-    - name: List Files
-      run: ls
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
@@ -40,8 +36,6 @@ jobs:
         uses: krdlab/setup-haxe@v1.5.1
         with:
           haxe-version: 4.3.1
-      - name: Log current dir
-        run: pwd
       - name: Install hxcpp
         run: haxelib git hxcpp https://github.com/HaxeFoundation/hxcpp.git
       - name: Build hxcpp
@@ -50,8 +44,6 @@ jobs:
         run: haxe Release.hxml
       - name: Move Compiler
         run: mv ./Binary/cpp/Main.exe ./ALCL.exe
-      - name: List Files
-        run: dir
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -72,10 +64,29 @@ jobs:
           chmod +x ./ALCL
           chmod +x ./Scripts/git_test_linux.sh
           ./Scripts/git_test_linux.sh
-      - name: File Tree
+      - name: List Files (debugging)
         run: tree
       - name: Run Tests
         run: |
           cd ./Env/Out/Tests/build
           chmod +x ./output
           ./output
+  run-tests-windows:
+    runs-on: windows-latest
+    needs: build-windows
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v4
+      - name: Download compiled file
+        uses: actions/download-artifact@v4
+        with:
+          name: alcl-windows
+      - name: Generate Tests
+        run: |
+          ./Scripts/git_test_windows
+      - name: List Files (debugging)
+        run: tree
+      - name: Run Tests
+        run: |
+          cd ./Env/Out/Tests/build/Release
+          ./output.exe

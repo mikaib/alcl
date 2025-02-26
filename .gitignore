@@ -1,3 +1,4 @@
-./Binary
-./Build
-./Env
+Binary
+Env/Out
+Env/.idea
+.idea

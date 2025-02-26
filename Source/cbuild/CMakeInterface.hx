@@ -19,7 +19,7 @@ class CMakeInterface extends CBuild {
 
         var cmakeContent = new StringBuf();
         cmakeContent.add("cmake_minimum_required(VERSION 3.10)\n");
-        cmakeContent.add("project(CBuildProject)\n");
+        cmakeContent.add("project(ALCLOutput)\n");
         cmakeContent.add("add_executable(" + output + " ");
 
         var uniqueDirs: Array<String> = [];
@@ -45,7 +45,28 @@ class CMakeInterface extends CBuild {
 
         File.saveContent(buildDir + "/CMakeLists.txt", cmakeContent.toString());
         Sys.setCwd(buildDir);
-        Sys.command("cmake .");
-        Sys.command("cmake --build . --config Release");
+        // Sys.command("cmake .");
+        // Sys.command("cmake --build . --config Release");
+        var cmds: Array<String> = [
+            "cmake .",
+            "cmake --build . --config Release"
+        ];
+
+        var problems: Bool = false;
+        for (cmd in cmds) {
+            var cmdArgs = cmd.split(" ");
+            var cmdName = cmdArgs.shift();
+            var process = new Process(cmdName, cmdArgs);
+            var err = process.stderr.readAll().toString();
+
+            if (err.length > 0) {
+                Logging.error(err);
+                problems = true;
+            }
+        }
+
+        if (problems) {
+            Logging.error("Compilation failed (cmake)");
+        }
     }
 }

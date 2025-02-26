@@ -361,7 +361,7 @@ class ProjectData {
 
                 Logging.info('Dumped AST to ${outputFilename}');
             }
-            Logging.success('Done! Took ${Sys.time() - start} seconds.');
+            // Logging.success('Done! Took ${Sys.time() - start} seconds.');
         }
     }
 
