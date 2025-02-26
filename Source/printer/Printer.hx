@@ -181,7 +181,7 @@ class Printer {
 
     public function printUnaryOperation(node: Node): String {
         var op: String = node.value;
-        return '${op}${printChildren(node, true)}';
+        return '${printChildren(node, true)}';
     }
 
     public function printReturn(node: Node): String {
