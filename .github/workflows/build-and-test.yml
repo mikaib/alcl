@@ -59,7 +59,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: alcl-linux
-      - name: Generate Tests
+      - name: Setup GCC
+        uses: Dup4/actions-setup-gcc@v1
+        version: latest
+      - name: Generate and Compile Tests
+        uses: threeal/cmake-action@v2.1.0
         run: |
           chmod +x ./ALCL
           chmod +x ./Scripts/git_test_linux.sh
