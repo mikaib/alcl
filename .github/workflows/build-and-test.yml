@@ -16,7 +16,7 @@ jobs:
       with:
         haxe-version: 4.3.1
     - name: Install hxcpp
-      run: haxelib install hxcpp
+      run: haxelib git hxcpp https://github.com/HaxeFoundation/hxcpp.git
     - name: Build Compiler
       run: haxe Release.hxml
     - name: Move Compiler
@@ -37,7 +37,7 @@ jobs:
         with:
           haxe-version: 4.3.1
       - name: Install hxcpp
-        run: haxelib install hxcpp
+        run: haxelib git hxcpp https://github.com/HaxeFoundation/hxcpp.git
       - name: Build Compiler
         run: haxe Release.hxml
       - name: Move Compiler
