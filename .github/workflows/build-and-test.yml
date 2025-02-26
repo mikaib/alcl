@@ -60,6 +60,6 @@ jobs:
         with:
           name: alcl-linux
       - name: Generate Tests
-        run: bash ./Scripts/git_test_linux.sh
+        run: ./Scripts/git_test_linux.sh
       - name: File Tree
         run: tree
