@@ -17,7 +17,9 @@ jobs:
       uses: krdlab/setup-haxe@v1.5.1
       with:
         haxe-version: 4.3.1
-    - name: list
+    - name: Install hxcpp
+      run: haxelib install hxcpp
+    - name: List Files
       run: ls
     - name: Build Compiler
       run: haxe Release.hxml
