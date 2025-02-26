@@ -59,7 +59,8 @@ class CMakeInterface extends CBuild {
             var process = new Process(cmdName, cmdArgs);
             var err = process.stderr.readAll().toString();
 
-            if (err.length > 0) {
+            if (process.exitCode(true) != 0) {
+                Logging.print(process.stdout.readAll().toString());
                 Logging.error(err);
                 problems = true;
             }
