@@ -1,11 +1,12 @@
-var totalTests: Int32 = 0;
-var passingTests: Int32 = 0;
-var failingTests: Int32 = 0;
+#include "stdio.h"
+#include "stdlib.h"
+#include "stdbool.h"
+#include "./global.h"
 
-#native_function
-#native_header "stdio.h"
-#native_header "stdlib.h"
-func alcl_test_float(name: CString, a: Float64, b: Float64): Void {
+int totalTests = 0;
+int passingTests = 0;
+int failingTests = 0;
+void alcl_test_float(char* name, double a, double b) {
     double error = 0.0000000000001;
     totalTests = totalTests + 1;
     if (a < b - error || a > b + error) {
@@ -17,10 +18,7 @@ func alcl_test_float(name: CString, a: Float64, b: Float64): Void {
     }
 }
 
-#native_function
-#native_header "stdio.h"
-#native_header "stdlib.h"
-func alcl_test_int(name: CString, a: Int64, b: Int64): Void {
+void alcl_test_int(char* name, long long a, long long b) {
     totalTests = totalTests + 1;
     if (a != b) {
         failingTests = failingTests + 1;
@@ -31,11 +29,7 @@ func alcl_test_int(name: CString, a: Int64, b: Int64): Void {
     }
 }
 
-#native_function
-#native_header "stdio.h"
-#native_header "stdlib.h"
-#native_header "stdbool.h"
-func alcl_test_bool(name: CString, v: Bool): Void {
+void alcl_test_bool(char* name, unsigned char v) {
     totalTests = totalTests + 1;
     if (v == false) {
         failingTests = failingTests + 1;
@@ -46,9 +40,7 @@ func alcl_test_bool(name: CString, v: Bool): Void {
     }
 }
 
-#native_function
-#native_header "stdio.h"
-func alcl_test_summary(): Int32 {
+int alcl_test_summary() {
     printf("\n");
     printf("Total tests: %d\n", totalTests);
     printf("Passing tests: %d\n", passingTests);
@@ -56,3 +48,4 @@ func alcl_test_summary(): Int32 {
 
     return failingTests != 0;
 }
+

@@ -1,0 +1,10 @@
+^C:\PROJECTS\ALCL\ENV\OUT\TESTS\BUILD\CMAKELISTS.TXT
+setlocal
+C:\ProgramData\chocolatey\lib\cmake.portable\tools\cmake-3.30.0-rc3-windows-x86_64\bin\cmake.exe -SC:/projects/ALCL/Env/Out/Tests/build -BC:/projects/ALCL/Env/Out/Tests/build --check-stamp-file C:/projects/ALCL/Env/Out/Tests/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
