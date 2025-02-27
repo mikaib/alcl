@@ -140,6 +140,7 @@ class Tokenizer {
                     if (i + 2 < code.length && code.charAt(i + 1) == '.' && code.charAt(i + 2) == '.') {
                         tokens.push({ type: TokenType.Spread, value: c, line: line, column: column, index: i });
                         column += 3;
+                        i += 2;
                     } else {
                         tokens.push({ type: TokenType.Dot, value: c, line: line, column: column, index: i });
                         column++;
@@ -255,12 +256,20 @@ class Tokenizer {
                         var value = c;
                         var j = i + 1;
                         var hasDot = (c == '.');
+                        var hasDotAt: Int = -1;
                         while (j < code.length) {
                             var c2 = code.charAt(j);
                             var charCode2 = c2.charCodeAt(0);
-                            if ((charCode2 >= 48 && charCode2 <= 57) || (c2 == '.' && !hasDot)) {
+                            if ((charCode2 >= 48 && charCode2 <= 57) || c2 == '.') {
                                 if (c2 == '.') {
+                                    if (hasDot) { // when double dot is detected, assume int (for spread op)
+                                        value = value.substring(0, value.length - 1);
+                                        j = hasDotAt;
+                                        break;
+                                    }
+
                                     hasDot = true;
+                                    hasDotAt = j;
                                 }
                                 value += c2;
                                 j++;
