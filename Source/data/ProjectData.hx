@@ -261,26 +261,34 @@ class ProjectData {
         var start = Sys.time();
 
         for (dependency in _dependencies) {
+            Logging.debug('Building dependency: ${dependency.getProjectName()}');
             dependency.setOutputDirectory(_outputDirectory);
             dependency.setImportMap(_importMap);
             dependency.setAstMap(_astMap);
             dependency.setDumpAst(_dumpAst);
             dependency.setParserMap(_parserMap);
             dependency.setBuiltFileMap(_builtFileMap);
+            dependency.setVerbose(_verbose);
             dependency.build(true);
         }
 
-        // Logging.info('Start building: ${_projectName}');
+        if (getVerbose()) Logging.info('Start building: ${_projectName}');
         var errors = new ErrorContainer();
 
         // import map prepass
         for (file in _files) {
             var baseLoc = baseLocOf(file);
             addImport(baseLoc, file);
+
+            Logging.debug('Import map: ${baseLoc} -> ${file}');
         }
 
         // tokenize + gen ASTs
         for (file in _files) {
+            if (getVerbose()) {
+                Logging.info('- ${file} [parse]');
+            }
+
             if (!FileSystem.exists(file)) {
                 errors.addError({ type: ErrorType.FileNotFound, message: file });
                 continue;
@@ -306,6 +314,10 @@ class ProjectData {
 
         // typer + verifier
         for (file in _files) {
+            if (getVerbose()) {
+                Logging.info('- ${file} [verify]');
+            }
+
             var parser = _parserMap[file];
             if (parser == null) {
                 Logging.warn('Missing parser for file "$file"');
@@ -327,6 +339,10 @@ class ProjectData {
 
         // print ASTs
         for (file in _files) {
+            if (getVerbose()) {
+                Logging.info('- ${file} [write]');
+            }
+
             var parser = _parserMap[file];
             if (parser == null) {
                 Logging.warn('Missing parser for file "$file"');
@@ -361,7 +377,10 @@ class ProjectData {
 
                 Logging.info('Dumped AST to ${outputFilename}');
             }
-            // Logging.success('Done! Took ${Sys.time() - start} seconds.');
+
+            if (_verbose) {
+                Logging.success('Generation Done! Took ${Sys.time() - start} seconds.');
+            }
         }
     }
 

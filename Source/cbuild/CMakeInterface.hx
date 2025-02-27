@@ -52,14 +52,29 @@ class CMakeInterface extends CBuild {
 
         var problems: Bool = false;
         for (cmd in cmds) {
+            if (_project.getVerbose()) {
+                Logging.print("running: " + cmd);
+                Sys.command(cmd);
+                continue;
+            }
+
+            if (problems) {
+                continue;
+            }
+
             var cmdArgs = cmd.split(" ");
             var cmdName = cmdArgs.shift();
-            var process = new Process(cmdName, cmdArgs);
-            var err = process.stderr.readAll().toString();
+            try {
+                var process = new Process(cmdName, cmdArgs);
+                var err = process.stderr.readAll().toString();
 
-            if (process.exitCode(true) != 0) {
-                Logging.print(process.stdout.readAll().toString());
-                Logging.error(err);
+                if (process.exitCode(true) != 0) {
+                    Logging.print(process.stdout.readAll().toString());
+                    Logging.error(err);
+                    problems = true;
+                }
+            } catch (e: Dynamic) {
+                Logging.error("Failed to run CMake command!");
                 problems = true;
             }
         }

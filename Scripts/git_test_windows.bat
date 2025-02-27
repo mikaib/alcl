@@ -14,7 +14,7 @@ cd /d ..
 echo Test files:
 for %%F in (!TEST_FILES!) do echo - %%F
 
-ALCL -cwd ./Tests -compile cmake -std ../Stdlib -output ../Env/Out/Tests !TEST_FILES!
+ALCL -verbose yes -cwd ./Tests -compile cmake -std ../Stdlib -output ../Env/Out/Tests !TEST_FILES!
 echo Tests generated!
 
 endlocal
