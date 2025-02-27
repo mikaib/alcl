@@ -1,5 +1,11 @@
 need "alcl/compiler_testing"
 
 func test_for(): Void {
+    // Basic
+    var counter: Int32 = 0;
+    for (var i: Int32 = 0; i < 10; i = i + 1) {
+        counter = counter + 1;
+    }
 
+    alcl_test_int("Basic for Loop", counter, 10);
 }

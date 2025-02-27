@@ -137,8 +137,13 @@ class Tokenizer {
                     column++;
 
                 case '.':
-                    tokens.push({ type: TokenType.Dot, value: c, line: line, column: column, index: i });
-                    column++;
+                    if (i + 2 < code.length && code.charAt(i + 1) == '.' && code.charAt(i + 2) == '.') {
+                        tokens.push({ type: TokenType.Spread, value: c, line: line, column: column, index: i });
+                        column += 3;
+                    } else {
+                        tokens.push({ type: TokenType.Dot, value: c, line: line, column: column, index: i });
+                        column++;
+                    }
 
                 case '-':
                     tokens.push({ type: TokenType.Minus, value: c, line: line, column: column, index: i });

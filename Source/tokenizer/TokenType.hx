@@ -25,6 +25,7 @@ enum TokenType {
     Colon;
     StringLiteral;
     Meta;
+    Spread;
 
     And;
     Or;

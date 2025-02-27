@@ -524,8 +524,18 @@ class ParserContext {
             p.push({ type: Semicolon, value: ";", line: last.line, column: last.column + 1, index: last.index + 1 });
         }
 
+        if (!hasNextOfType(TokenType.LeftBrace)) return;
+        var bodyTokens: Array<Token> = getTokenArrayDelim(TokenType.LeftBrace, TokenType.RightBrace);
+        var bodyNode = createNode(
+            NodeType.WhileLoopBody,
+            bodyTokens[0],
+            bodyTokens[bodyTokens.length - 1],
+            node
+        );
+
         // (init; cond; iter) style for loop
-        if (conditionParts.length > 2) {
+        // NOTE: >1 check so that failures can be caught later
+        if (conditionParts.length > 1) {
             var conditionNode = createNode(
                 NodeType.WhileLoopCond,
                 conditionParts[1][0],
@@ -537,15 +547,6 @@ class ParserContext {
 
             var conditionCtx: ParserContext = new ParserContext(conditionParts[1], _parser, conditionNode);
             conditionCtx.parse();
-
-            if (!hasNextOfType(TokenType.LeftBrace)) return;
-            var bodyTokens: Array<Token> = getTokenArrayDelim(TokenType.LeftBrace, TokenType.RightBrace);
-            var bodyNode = createNode(
-                NodeType.WhileLoopBody,
-                bodyTokens[0],
-                bodyTokens[bodyTokens.length - 1],
-                node
-            );
 
             node.children.push(bodyNode);
 
@@ -562,7 +563,7 @@ class ParserContext {
             return;
         }
 
-        // (var in obj) or (var in 0...1) style for loop
+        // TODO: (var in obj), (var of obj), (var in x...y)
     }
 
     public function parseConditionBodyKind(nodeType: NodeType, bodyType: NodeType, condType: NodeType, token: Token): Void {
@@ -775,26 +776,28 @@ class ParserContext {
 
     public function getPrecedence(op: TokenType): Int {
         switch (op) {
-            case TokenType.Or:
+            case TokenType.Spread:
                 return 1;
-            case TokenType.And:
+            case TokenType.Or:
                 return 2;
-            case TokenType.BitwiseOr:
+            case TokenType.And:
                 return 3;
-            case TokenType.BitwiseXor:
+            case TokenType.BitwiseOr:
                 return 4;
-            case TokenType.BitwiseAnd:
+            case TokenType.BitwiseXor:
                 return 5;
-            case TokenType.Equal | TokenType.NotEqual:
+            case TokenType.BitwiseAnd:
                 return 6;
-            case TokenType.Less | TokenType.LessEqual | TokenType.Greater | TokenType.GreaterEqual:
+            case TokenType.Equal | TokenType.NotEqual:
                 return 7;
-            case TokenType.Plus | TokenType.Minus:
+            case TokenType.Less | TokenType.LessEqual | TokenType.Greater | TokenType.GreaterEqual:
                 return 8;
-            case TokenType.Star | TokenType.Slash | TokenType.Percent:
+            case TokenType.Plus | TokenType.Minus:
                 return 9;
-            case TokenType.Not | TokenType.BitwiseNot:
+            case TokenType.Star | TokenType.Slash | TokenType.Percent:
                 return 10;
+            case TokenType.Not | TokenType.BitwiseNot:
+                return 11;
             default:
                 return 0;
         }
