@@ -1,12 +1,11 @@
-need "alcl/compiler_testing"
 need "io"
 
 func main(): Int32 {
-    if (a == b) {
-        println("a == b")
-    } else if (c == d) {
-        println("c == d")
-    } else {
-        println("a != b and c != d")
+    println("Hello World!");
+
+    for (var i: Int32 = 0; i < 10; i = i + 1) {
+        println(i);
     }
+
+    return 0;
 }

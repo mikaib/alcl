@@ -1,11 +1,14 @@
+need "alcl/compiler_testing"
 need "test_math"
 need "test_while"
 need "test_comparisons"
+need "test_for"
 
 func main(): Int32 {
     test_math();
     test_while();
     test_comparisons();
+    test_for();
 
     return alcl_test_summary();
 }

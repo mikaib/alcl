@@ -1,0 +1,5 @@
+need "alcl/compiler_testing"
+
+func test_for(): Void {
+
+}

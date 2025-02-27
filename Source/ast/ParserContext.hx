@@ -88,7 +88,6 @@ class ParserContext {
 
         while (hasNext()) {
             var next = next();
-            tokens.push(next);
 
             if (next.type == start) {
                 depth++;
@@ -101,9 +100,11 @@ class ParserContext {
             if (depth == 0) {
                 break;
             }
+
+            tokens.push(next);
         }
 
-        return tokens.slice(1, -1);
+        return tokens.slice(1);
     }
 
     public function tokenArrayGroupByEnsureLevel(tokenArr: Array<Token>, delim: TokenType, up: TokenType, down: TokenType): Array<Array<Token>> {
@@ -368,7 +369,8 @@ class ParserContext {
 
             varNode.children.push(assignNode);
 
-            var assignCtx: ParserContext = new ParserContext(getTokenArrayDelim(TokenType.Assign, TokenType.Semicolon), _parser, assignNode);
+            var assignTokens: Array<Token> = getTokenArrayDelim(TokenType.Null, TokenType.Semicolon, 1);
+            var assignCtx: ParserContext = new ParserContext(assignTokens, _parser, assignNode);
             assignCtx.parse();
         }
 
@@ -510,6 +512,59 @@ class ParserContext {
         return getPrecedence(t.type) > 0;
     }
 
+    public function parseForLoop(token: Token): Void {
+        var node = createNode(NodeType.WhileLoop, token, null, null);
+
+        if (!hasNextOfType(TokenType.LeftParen)) return;
+        var conditionTokens: Array<Token> = getTokenArrayDelim(TokenType.LeftParen, TokenType.RightParen);
+        var conditionParts: Array<Array<Token>> = tokenArrayGroupByEnsureLevel(conditionTokens, TokenType.Semicolon, TokenType.LeftParen, TokenType.RightParen);
+
+        for (p in conditionParts) {
+            var last: Token = p[p.length - 1];
+            p.push({ type: Semicolon, value: ";", line: last.line, column: last.column + 1, index: last.index + 1 });
+        }
+
+        // (init; cond; iter) style for loop
+        if (conditionParts.length > 2) {
+            var conditionNode = createNode(
+                NodeType.WhileLoopCond,
+                conditionParts[1][0],
+                conditionParts[1][conditionParts[1].length - 1],
+                node
+            );
+
+            node.children.push(conditionNode);
+
+            var conditionCtx: ParserContext = new ParserContext(conditionParts[1], _parser, conditionNode);
+            conditionCtx.parse();
+
+            if (!hasNextOfType(TokenType.LeftBrace)) return;
+            var bodyTokens: Array<Token> = getTokenArrayDelim(TokenType.LeftBrace, TokenType.RightBrace);
+            var bodyNode = createNode(
+                NodeType.WhileLoopBody,
+                bodyTokens[0],
+                bodyTokens[bodyTokens.length - 1],
+                node
+            );
+
+            node.children.push(bodyNode);
+
+            var initCtx: ParserContext = new ParserContext(conditionParts[0], _parser, _root);
+            initCtx.parse();
+
+            var bodyCtx: ParserContext = new ParserContext(bodyTokens, _parser, bodyNode);
+            bodyCtx.parse();
+
+            var iterCtx: ParserContext = new ParserContext(conditionParts[2], _parser, bodyNode);
+            iterCtx.parse();
+
+            addNode(node);
+            return;
+        }
+
+        // (var in obj) or (var in 0...1) style for loop
+    }
+
     public function parseConditionBodyKind(nodeType: NodeType, bodyType: NodeType, condType: NodeType, token: Token): Void {
         var node = createNode(nodeType, token, null, null);
 
@@ -584,6 +639,8 @@ class ParserContext {
                 parseVarDef(token);
             case "return":
                 parseReturn(token);
+            case "for":
+                parseForLoop(token);
             case "if":
                 parseConditionBodyKind(NodeType.IfStatement, NodeType.IfStatementBody, NodeType.IfStatementCond, token);
             case "else":

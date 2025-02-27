@@ -1,5 +1,4 @@
 need "alcl/compiler_testing"
-need "io"
 
 func test_while(): Void {
     // basic
