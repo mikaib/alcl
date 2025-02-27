@@ -261,7 +261,7 @@ class ProjectData {
         var start = Sys.time();
 
         for (dependency in _dependencies) {
-            Logging.debug('Building dependency: ${dependency.getProjectName()}');
+            if (_verbose) Logging.debug('Building dependency: ${dependency.getProjectName()}');
             dependency.setOutputDirectory(_outputDirectory);
             dependency.setImportMap(_importMap);
             dependency.setAstMap(_astMap);
@@ -280,7 +280,7 @@ class ProjectData {
             var baseLoc = baseLocOf(file);
             addImport(baseLoc, file);
 
-            Logging.debug('Import map: ${baseLoc} -> ${file}');
+            if (_verbose) Logging.debug('Import map: ${baseLoc} -> ${file}');
         }
 
         // tokenize + gen ASTs
