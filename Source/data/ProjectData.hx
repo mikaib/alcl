@@ -304,7 +304,8 @@ class ProjectData {
             var parser = new Parser(tokenizer);
 
             parser.parse();
-            // parser.print();
+            trace(file);
+            parser.print();
             _parserMap[file] = parser;
 
             if (baseLocOf(file) != "alcl/global" && parser.doesWantGlobalLib()) { // making sure primitive types and runtime libs are there.

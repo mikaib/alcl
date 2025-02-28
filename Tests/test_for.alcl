@@ -1,11 +1,57 @@
 need "alcl/compiler_testing"
 
 func test_for(): Void {
+    // TODO: when the analyser is implemented and for loops automatically declares the loop variables, remove these declarations.
+    var i: Int32 = 0;
+    var j: Int32 = 0;
+
     // Basic
     var counter: Int32 = 0;
-    for (var i: Int32 = 0; i < 10; i = i + 1) {
+    for (i = 0; i < 10; i = i + 1) {
         counter = counter + 1;
     }
-
     alcl_test_int("Basic for Loop", counter, 10);
+
+    // Reverse
+    counter = 0;
+    for (i = 10; i > 0; i = i - 1) {
+        counter = counter + 1;
+    }
+    alcl_test_int("Reverse for Loop", counter, 10);
+
+    // Step of 2
+    counter = 0;
+    for (i = 0; i < 10; i = i + 2) {
+        counter = counter + 1;
+    }
+    alcl_test_int("For Loop with Step 2", counter, 5);
+
+    // Nested Loops
+    counter = 0;
+    for (i = 0; i < 5; i = i + 1) {
+        for (j = 0; j < 5; j = j + 1) {
+            counter = counter + 1;
+        }
+    }
+    alcl_test_int("Nested For Loop", counter, 25);
+
+    // Early Exit (break)
+    counter = 0;
+    for (i = 0; i < 10; i = i + 1) {
+        if (i == 5) {
+            break;
+        }
+        counter = counter + 1;
+    }
+    alcl_test_int("For Loop with Break", counter, 5);
+
+    // Continue Statement
+    counter = 0;
+    for (i = 0; i < 10; i = i + 1) {
+        if (i % 2 == 0) {
+            continue;
+        }
+        counter = counter + 1;
+    }
+    alcl_test_int("For Loop with Continue", counter, 5);
 }

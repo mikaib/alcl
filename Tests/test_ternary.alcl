@@ -1,0 +1,49 @@
+need "alcl/compiler_testing"
+
+func isPositiveNumber(num: Int32): Bool {
+    return num > 0 ? true : false;
+}
+
+func test_ternary(): Void {
+    // Ternary Leap year
+    var year: Int32 = 1900;
+    var isLeap: Bool = year % 4 == 0 ? (year % 100 != 0 || year % 400 == 0 ? true : false) : false;
+
+    // Ternary Min/Max
+    var a: Int32 = 10;
+    var b: Int32 = 20;
+    var min: Int32 = a < b ? a : b;
+    var max: Int32 = a > b ? a : b;
+    alcl_test_int("Ternary Min", min, 10);
+    alcl_test_int("Ternary Max", max, 20);
+
+    // Ternary Even/Odd Check
+    var num: Int32 = 7;
+    var is_even: CString = num % 2 == 0 ? "Even" : "Odd";
+    alcl_test_string("Ternary Even/Odd", is_even, "Odd");
+
+    // Ternary Positive/Negative/Zero
+    var value: Int32 = -5;
+    var status: CString = value > 0 ? "Positive" : (value < 0 ? "Negative" : "Zero");
+    alcl_test_string("Ternary Pos/Neg/Zero", status, "Negative");
+
+    // Nested Ternary for Range Check
+    var score: Int32 = 85;
+    var grade: CString = score >= 90 ? "A" : (score >= 80 ? "B" : (score >= 70 ? "C" : "F"));
+    alcl_test_string("Ternary Grade", grade, "B");
+
+    // Non-inline ternary
+    var x: Int32 = 10;
+    var y: Int32 = 20;
+    var z: Int32 = 30;
+    var yLargerThanX: Bool = false;
+    x < y ? yLargerThanX = true : yLargerThanX = false;
+    alcl_test_bool("Ternary Non-inline", yLargerThanX, true);
+
+    // Ternary with function call
+    var isPositive: Bool = isPositiveNumber(5) == true ? true : false; // even though this is redundant, it's just for testing
+    alcl_test_bool("Ternary Function Call", isPositive, true);
+
+    // Ternary inside of function param
+    alcl_test_bool("Ternary Function Param", isPositiveNumber(5 > 0 ? 5 : -5), true);
+}

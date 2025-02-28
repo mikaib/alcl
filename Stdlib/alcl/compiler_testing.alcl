@@ -35,11 +35,26 @@ func alcl_test_int(name: CString, a: Int64, b: Int64): Void {
 #native_header "stdio.h"
 #native_header "stdlib.h"
 #native_header "stdbool.h"
-func alcl_test_bool(name: CString, v: Bool): Void {
+func alcl_test_bool(name: CString, v: Bool, expected: Bool): Void {
     totalTests = totalTests + 1;
-    if (v == false) {
+    if (v != expected) {
         failingTests = failingTests + 1;
         printf("FAIL: %s\n", name);
+    } else {
+        passingTests = passingTests + 1;
+        printf("PASS: %s\n", name);
+    }
+}
+
+#native_function
+#native_header "stdio.h"
+#native_header "stdlib.h"
+#native_header "string.h"
+func alcl_test_string(name: CString, a: CString, b: CString): Void {
+    totalTests = totalTests + 1;
+    if (strcmp(a, b) != 0) {
+        failingTests = failingTests + 1;
+        printf("FAIL: %s (%s != %s)\n", name, a, b);
     } else {
         passingTests = passingTests + 1;
         printf("PASS: %s\n", name);

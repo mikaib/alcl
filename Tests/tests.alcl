@@ -3,12 +3,14 @@ need "test_math"
 need "test_while"
 need "test_comparisons"
 need "test_for"
+need "test_ternary"
 
 func main(): Int32 {
     test_math();
     test_while();
     test_comparisons();
     test_for();
+    test_ternary();
 
     return alcl_test_summary();
 }

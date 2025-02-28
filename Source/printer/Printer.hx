@@ -85,9 +85,9 @@ class Printer {
             case NodeType.FunctionDeclBody:
                 out += printChildren(node);
             case NodeType.VarAssign:
-                out += printVarAssign(node, indent);
+                out += printVarAssign(node, indent, inlineNode);
             case NodeType.VarDef:
-                out += printVarDef(node, indent);
+                out += printVarDef(node, indent, inlineNode);
             case NodeType.WhileLoop:
                 out += printWhileLoop(node, indent);
             case NodeType.WhileLoopBody:
@@ -100,16 +100,16 @@ class Printer {
                 out += printElseStatement(node, indent);
             case NodeType.IfStatementBody:
                 out += printChildren(node);
-            case NodeType.WhileLoopBreak:
-                out += 'break;\n';
-            case NodeType.WhileLoopContinue:
-                out += 'continue;\n';
+            case NodeType.LoopBreak:
+                out += 'break${inlineNode ? "" : ";\n"}';
+            case NodeType.LoopContinue:
+                out += 'continue${inlineNode ? "" : ";\n"}';
             case NodeType.BinaryOp:
                 out += printBinaryOperation(node);
             case NodeType.UnaryOp:
                 out += printUnaryOperation(node);
             case NodeType.Return:
-                out += printReturn(node);
+                out += printReturn(node, indent, inlineNode);
             case NodeType.BooleanLiteral:
                 out += node.value == "true" ? "1" : "0";
             case NodeType.FunctionDeclNativeBody:
@@ -122,10 +122,16 @@ class Printer {
                 out += printChildren(node, true);
             case NodeType.SubExpression:
                 out += '(${printChildren(node, true)})';
+            case NodeType.Ternary:
+                out += printTernary(node, inlineNode);
+            case NodeType.ForLoop:
+                out += printForLoop(node, indent);
             case NodeType.NumberLiteral:
                 out += node.value;
             case NodeType.Identifier:
                 out += node.value;
+            case NodeType.ForLoopBody:
+                out += printChildren(node);
             default:
         }
 
@@ -184,8 +190,17 @@ class Printer {
         return '${op}${printChildren(node, true)}';
     }
 
-    public function printReturn(node: Node): String {
-        return 'return ${printChildren(node, true)};\n';
+    public function printReturn(node: Node, indent: Int, inlineNode: Bool): String {
+        // return 'return ${printChildren(node, true)};\n';
+        return 'return ${printChildren(node, true)}${inlineNode ? "" : ";\n"}';
+    }
+
+    public function printTernary(node: Node, isInline: Bool): String {
+        var condition = findChildOfType(node, NodeType.TernaryCond);
+        var trueBranch = findChildOfType(node, NodeType.TernaryTrue);
+        var falseBranch = findChildOfType(node, NodeType.TernaryFalse);
+
+        return '${printChildren(condition, true)} ? ${printChildren(trueBranch, true)} : ${printChildren(falseBranch, true)}${isInline ? "" : ";\n"}';
     }
 
     public function printFunctionDecl(node: Node, indent: Int): String {
@@ -234,7 +249,43 @@ class Printer {
         return '${node.value}(${argStr.substr(0, argStr.length - 2)})${inlineCall ? "" : ";\n"}';
     }
 
-    public function printVarDef(node: Node, indent: Int): String {
+    public function printForLoop(node: Node, indent: Int): String {
+        var body: Node = findChildOfType(node, NodeType.ForLoopBody);
+        if (body == null) {
+            body = {
+                type: NodeType.ForLoopBody,
+                value: null
+            };
+        }
+
+        var init = findChildOfType(node, NodeType.ForLoopInit);
+        if (init == null) {
+            init = {
+                type: NodeType.ForLoopInit,
+                value: null
+            };
+        }
+
+        var cond = findChildOfType(node, NodeType.ForLoopCond);
+        if (cond == null) {
+            cond = {
+                type: NodeType.ForLoopCond,
+                value: null
+            };
+        }
+
+        var iter = findChildOfType(node, NodeType.ForLoopIter);
+        if (iter == null) {
+            iter = {
+                type: NodeType.ForLoopIter,
+                value: null
+            };
+        }
+
+        return 'for (${printChildren(init, true)}; ${printChildren(cond, true)}; ${printChildren(iter, true)}) {\n${replaceLast(printNode(body, indent + 1), "\n", "")}\n}\n';
+    }
+
+    public function printVarDef(node: Node, indent: Int, inlineNode: Bool): String {
         var type = findChildOfType(node, NodeType.VarType);
         if (type == null) {
             type = {
@@ -251,10 +302,14 @@ class Printer {
             }
         }
 
-        return '${_types.convertTypeAlclToC(type.value)} ${node.value} = ${printChildren(value, true)};\n';
+        if (inlineNode) {
+            return '(${_types.convertTypeAlclToC(type.value)} ${node.value} = ${printChildren(value, true)})';
+        } else {
+            return '${_types.convertTypeAlclToC(type.value)} ${node.value} = ${printChildren(value, true)};\n';
+        }
     }
 
-    public function printVarAssign(node: Node, indent: Int): String {
+    public function printVarAssign(node: Node, indent: Int, inlineNode: Bool): String {
         var value = findChildOfType(node, NodeType.VarValue);
         if (value == null) {
             value = {
@@ -263,7 +318,11 @@ class Printer {
             }
         }
 
-        return '${node.value} = ${printChildren(value, true)};\n';
+        if (inlineNode) {
+            return '(${node.value} = ${printChildren(value, true)})';
+        } else {
+            return '${node.value} = ${printChildren(value, true)};\n';
+        }
     }
 
     public function printIfStatement(node: Node, indent: Int): String {
