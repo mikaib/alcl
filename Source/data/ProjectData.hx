@@ -305,7 +305,7 @@ class ProjectData {
 
             parser.parse();
 //            trace(file);
-//            parser.printDotFile();
+//            parser.print();
             _parserMap[file] = parser;
 
             if (baseLocOf(file) != "alcl/global" && parser.doesWantGlobalLib()) { // making sure primitive types and runtime libs are there.

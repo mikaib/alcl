@@ -1,0 +1,37 @@
+### todo:
+- add analyser (verify ast, infer types, implicit casts, operator overloading, check return branches, etc)
+- allow analyser to morph varassign/vardecl based on the AnalyserScope
+- make for loops declare variables in the "init" part, so that "i = 0" will always work even if not declared.
+- add local functions that take in the current scope
+- add try-catch-finally and throw using local functions and a stack
+- add GC
+- add classes with constructor, destructor, methods, variables, polymorphism and inheritance
+- add "internal_type" meta so that a class can represent a primitive type instead of a struct ("this" could become an int for example)
+- add string class with implicit cast from/to "CString"
+- add arrays
+- add maps
+- add local functions
+- add arrow functions
+- add type parameters to classes
+- type aliases
+- basic standard lib
+
+done:
+- fix for loops to be it's own thing instead of syntactic sugar for while loops
+- add ternary conditionals
+- add for loops
+- setup CI to run tests
+- fix include paths and stdlib path
+- add build systemn (like cmake)
+- modify generation to use headers and modify guards
+- add "break" and "continue"
+- add while loops
+- add "if", "else if" and "else"
+- add return
+- add math operators and comparison operators
+- add variable declarations and assignments
+- add imports
+- add "native_function" and "native_header"
+- add metas
+- add function calls
+- add function decl

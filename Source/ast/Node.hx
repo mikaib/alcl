@@ -11,6 +11,7 @@ class Node {
     public var column: Int = 0;
     public var endLine: Int = 0;
     public var endColumn: Int = 0;
+    public var analysisType: String = null;
 
     public function deepCopy(addParent: Bool = true): Node {
         var node: Node = {

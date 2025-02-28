@@ -770,6 +770,14 @@ class ParserContext {
                 _parser.getTypes().addAlclToCTypeMapping(alclType, cType);
             case "no_global_lib":
                 @:privateAccess _parser._wantGlobalLib = false;
+            case "c":
+                var first = tokenizer.tokens.shift();
+                var last = tokenizer.tokens.pop();
+                var firstIdx = first.index;
+                var lastIdx = last.index + last.value.length;
+
+                var cCode: String = tokenizer.getChars(firstIdx, lastIdx);
+                addNode(createNode(NodeType.CCode, token, null, null, cCode));
             default:
                 _meta.set(name, tokenizer.tokens);
         }

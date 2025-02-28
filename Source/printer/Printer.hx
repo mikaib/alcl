@@ -132,6 +132,8 @@ class Printer {
                 out += node.value;
             case NodeType.ForLoopBody:
                 out += printChildren(node);
+            case NodeType.CCode:
+                out += node.value + (inlineNode ? "" : "\n");
             default:
         }
 

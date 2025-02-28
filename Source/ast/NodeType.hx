@@ -3,6 +3,7 @@ package ast;
 enum NodeType {
     None;
     Root;
+    CCode;
     FunctionDecl;
     FunctionDeclParam;
     FunctionDeclParamType;
