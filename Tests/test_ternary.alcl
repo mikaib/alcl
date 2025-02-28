@@ -27,7 +27,7 @@ func test_ternary(): Void {
     var status: CString = value > 0 ? "Positive" : (value < 0 ? "Negative" : "Zero");
     alcl_test_string("Ternary Pos/Neg/Zero", status, "Negative");
 
-    // Nested Ternary for Range Check
+    // Nested Ternary check
     var score: Int32 = 85;
     var grade: CString = score >= 90 ? "A" : (score >= 80 ? "B" : (score >= 70 ? "C" : "F"));
     alcl_test_string("Ternary Grade", grade, "B");
@@ -35,7 +35,6 @@ func test_ternary(): Void {
     // Non-inline ternary
     var x: Int32 = 10;
     var y: Int32 = 20;
-    var z: Int32 = 30;
     var yLargerThanX: Bool = false;
     x < y ? yLargerThanX = true : yLargerThanX = false;
     alcl_test_bool("Ternary Non-inline", yLargerThanX, true);
