@@ -304,8 +304,8 @@ class ProjectData {
             var parser = new Parser(tokenizer);
 
             parser.parse();
-            trace(file);
-            parser.print();
+//            trace(file);
+//            parser.printDotFile();
             _parserMap[file] = parser;
 
             if (baseLocOf(file) != "alcl/global" && parser.doesWantGlobalLib()) { // making sure primitive types and runtime libs are there.
@@ -355,8 +355,8 @@ class ProjectData {
             if (!_dumpAst) {
                 var outputC = printer.print();
                 var outputH = printer.printHeaderFile(baseLoc);
-                var outputFilenameC = Path.join([_outputDirectory, baseLoc + '.c']);
-                var outputFilenameH = Path.join([_outputDirectory, baseLoc + '.h']);
+                var outputFilenameC = Path.join([_outputDirectory, 'src', baseLoc + '.c']);
+                var outputFilenameH = Path.join([_outputDirectory, 'src', baseLoc + '.h']);
 
                 createDirectoryRecursive(Path.directory(outputFilenameC));
                 File.saveContent(outputFilenameC, outputC);

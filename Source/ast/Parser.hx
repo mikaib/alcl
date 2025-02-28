@@ -126,6 +126,8 @@ class Parser {
                 case NodeType.VarDef, NodeType.VarType, NodeType.VarAssign, NodeType.VarValue: "lightyellow";
                 case NodeType.StringLiteral, NodeType.NumberLiteral, NodeType.Identifier: "lightgray";
                 case NodeType.WhileLoop, NodeType.WhileLoopCond, NodeType.WhileLoopBody: "lightpink";
+                case NodeType.ForLoop, NodeType.ForLoopInit, NodeType.ForLoopCond, NodeType.ForLoopIter, NodeType.ForLoopBody: "lightseagreen";
+                case NodeType.Ternary, NodeType.TernaryCond, NodeType.TernaryTrue, NodeType.TernaryFalse: "lightsteelblue";
                 case NodeType.LoopContinue, NodeType.LoopBreak: "lightseagreen";
                 case NodeType.IfStatement, NodeType.IfStatementCond, NodeType.IfStatementBody, NodeType.IfStatementElse, NodeType.IfStatementElseIf: "lightsteelblue";
                 case NodeType.SubExpression: "lightgoldenrodyellow";

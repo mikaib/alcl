@@ -1,11 +1,9 @@
 need "io"
 
 func main(): Int32 {
-    counter = 0;
-    for (i = 0; i < 5; i = i + 1) {
-        for (j = 0; j < 5; j = j + 1) {
-            counter = counter + 1;
-        }
-    }
+    var score: Int32 = 85;
+    var grade: CString = score >= 90 ? "A" : (score >= 80 ? "B" : (score >= 70 ? "C" : "F"));
+    println(grade);
+
     return 0;
 }

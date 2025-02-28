@@ -25,7 +25,7 @@ class CMakeInterface extends CBuild {
         var uniqueDirs: Array<String> = [];
         for (file in files) {
             var dir = Path.directory(file);
-            cmakeContent.add("../" + file + " ");
+            cmakeContent.add("../src/" + file + " ");
 
             if (uniqueDirs.indexOf(dir) == -1) {
                 uniqueDirs.push(dir);
