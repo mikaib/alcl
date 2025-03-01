@@ -17,7 +17,8 @@ enum NodeType {
     VarAssign;
     VarValue;
     StringLiteral;
-    NumberLiteral;
+    FloatLiteral;
+    IntLiteral;
     BooleanLiteral;
     Identifier;
     ForLoop;

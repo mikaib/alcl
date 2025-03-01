@@ -126,7 +126,9 @@ class Printer {
                 out += printTernary(node, inlineNode);
             case NodeType.ForLoop:
                 out += printForLoop(node, indent);
-            case NodeType.NumberLiteral:
+            case NodeType.IntLiteral:
+                out += node.value;
+            case NodeType.FloatLiteral:
                 out += node.value;
             case NodeType.Identifier:
                 out += node.value;

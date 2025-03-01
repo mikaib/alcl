@@ -56,6 +56,10 @@ class ParserContext {
         return _tokens[_idx - 1 - skip];
     }
 
+    public function peekCurrent(): Token {
+        return _tokens[_idx];
+    }
+
     public function hasPrevOfType(type: TokenType, skip: Int = 0): Bool {
         return hasPrev(skip) && peekPrev(skip).type == type;
     }
@@ -308,11 +312,11 @@ class ParserContext {
         addNode(funcNode);
     }
 
-    public function extractPosFromChildren(node: Node) {
-        var minLine: Float = node.line;
-        var minCol: Float = node.column;
-        var maxLine: Float = node.endLine;
-        var maxCol: Float = node.endColumn;
+    public function extractPosFromChildren(node: Node, includeNode: Bool = false) {
+        var minLine: Float = includeNode ? node.line : Math.POSITIVE_INFINITY;
+        var minCol: Float = includeNode ? node.column : Math.POSITIVE_INFINITY;
+        var maxLine: Float = includeNode ? node.endLine : Math.NEGATIVE_INFINITY;
+        var maxCol: Float = includeNode ? node.endColumn : Math.NEGATIVE_INFINITY;
 
         for (child in node.children) {
             // line
@@ -437,11 +441,12 @@ class ParserContext {
             }
 
             if (right == null) {
-                right = createNode(NodeType.NumberLiteral, null, null, null, "0");
+                right = createNode(NodeType.IntLiteral, null, null, null, "0");
             }
             @:privateAccess _idx = currentIndex - 1;
 
             unaryNode.children.push(right);
+            extractPosFromChildren(unaryNode);
             addNode(unaryNode);
         } else {
             if (op.value == "?") {
@@ -484,10 +489,12 @@ class ParserContext {
             var leftNode = createNode(NodeType.OperationLeft);
             leftNode.children.push(left);
             left.parent = leftNode;
+            extractPosFromChildren(leftNode);
 
             var rightNode = createNode(NodeType.OperationRight);
             rightNode.children.push(right);
             right.parent = rightNode;
+            extractPosFromChildren(rightNode);
 
             binaryNode.children.push(leftNode);
             binaryNode.children.push(rightNode);
@@ -509,6 +516,7 @@ class ParserContext {
                 }
             }
 
+            extractPosFromChildren(binaryNode);
             addNode(binaryNode);
         }
     }
@@ -621,12 +629,17 @@ class ParserContext {
     }
 
     public function parseReturn(token: Token): Void {
+        var kw: Token = peekCurrent();
+
         prev();
         var tokens: Array<Token> = getTokenArrayDelim(TokenType.Null, TokenType.Semicolon, 1);
-        var returnNode: Node = createNode(NodeType.Return);
+        var returnNode: Node = createNode(NodeType.Return, kw, tokens[tokens.length - 1], null);
 
         var returnCtx: ParserContext = new ParserContext(tokens, _parser, returnNode);
         returnCtx.parse();
+
+        returnNode.line = kw.line;
+        returnNode.column = kw.column;
 
         addNode(returnNode);
     }
@@ -805,8 +818,10 @@ class ParserContext {
                 parseIdentifier(next);
             case TokenType.StringLiteral:
                 doExactConversion(next, NodeType.StringLiteral);
-            case TokenType.Float | TokenType.Integer:
-                doExactConversion(next, NodeType.NumberLiteral);
+            case TokenType.Float:
+                doExactConversion(next, NodeType.FloatLiteral);
+            case TokenType.Integer:
+                doExactConversion(next, NodeType.IntLiteral);
             case TokenType.Meta:
                 parseMeta(next);
                 isMeta = true;

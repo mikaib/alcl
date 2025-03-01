@@ -1,4 +1,5 @@
 package ast;
+import analysis.AnalyserScope;
 
 // ast node
 @:structInit
@@ -11,7 +12,8 @@ class Node {
     public var column: Int = 0;
     public var endLine: Int = 0;
     public var endColumn: Int = 0;
-    public var analysisType: String = null;
+    public var analysisType: Null<String> = null;
+    public var analysisScope: Null<AnalyserScope> = null;
 
     public function deepCopy(addParent: Bool = true): Node {
         var node: Node = {

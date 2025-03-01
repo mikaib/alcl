@@ -1,9 +1,7 @@
-need "io"
+func add(x, y) {
+    return add(x, y) + 5.1;
+}
 
-func main(): Int32 {
-    var score: Int32 = 85;
-    var grade: CString = score >= 90 ? "A" : (score >= 80 ? "B" : (score >= 70 ? "C" : "F"));
-    println(grade);
-
-    return 0;
+func main(a, b) {
+    return add(a, b);
 }

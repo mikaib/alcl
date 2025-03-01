@@ -17,6 +17,13 @@ class ErrorContainer {
     }
 
     /**
+     * Check if it has errors.
+     */
+    public function hasErrors(): Bool {
+        return _errors.length > 0;
+    }
+
+    /**
      * Returns the errors as a string.
      */
     public function printErrors(exit: Bool = true): Void {

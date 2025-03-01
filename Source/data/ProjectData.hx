@@ -9,6 +9,7 @@ import haxe.io.Path;
 import ast.Parser;
 import printer.Printer;
 import ast.Node;
+import analysis.Analyser;
 
 class ProjectData {
     private var _importMap: Map<String, String> = [];
@@ -304,8 +305,6 @@ class ProjectData {
             var parser = new Parser(tokenizer);
 
             parser.parse();
-//            trace(file);
-//            parser.print();
             _parserMap[file] = parser;
 
             if (baseLocOf(file) != "alcl/global" && parser.doesWantGlobalLib()) { // making sure primitive types and runtime libs are there.
@@ -313,7 +312,8 @@ class ProjectData {
             }
         }
 
-        // typer + verifier
+        // analyser
+        var analysers: Array<Analyser> = [];
         for (file in _files) {
             if (getVerbose()) {
                 Logging.info('- ${file} [verify]');
@@ -324,7 +324,15 @@ class ProjectData {
                 Logging.warn('Missing parser for file "$file"');
                 return;
             }
+
             var imports = parser.getLibRequirements();
+            var analyser = new Analyser(parser, file);
+            analysers.push(analyser);
+            analyser.run();
+
+            trace(file);
+            parser.print();
+
             for (imp in imports) {
                 var resolved = resolveImport(imp);
                 var parserOfImport = _parserMap[resolved];
@@ -336,6 +344,20 @@ class ProjectData {
 
                 parser.getTypes().copyFrom(parserOfImport.getTypes());
             }
+        }
+
+        // log errors
+        var hasErrors: Bool = false;
+        for (analyser in analysers) {
+            var errorContainer = analyser.getErrors();
+            if (errorContainer.hasErrors()) {
+                hasErrors = true;
+                errorContainer.printErrors(false);
+            }
+        }
+
+        if (hasErrors) {
+            Sys.exit(1);
         }
 
         // print ASTs

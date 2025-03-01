@@ -10,7 +10,7 @@ class Error {
     public function toString(): String {
         var str = '';
         if (this.position != null) {
-            str += '${this.position.file}:${this.position.line}:${this.position.column}: ';
+            str += '(${this.position.file}:${this.position.line}:${this.position.column}) ';
         }
         str += '${this.type}: ${this.message}';
         if (this.stack.length > 0) {

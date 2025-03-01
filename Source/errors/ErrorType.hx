@@ -6,4 +6,11 @@ enum ErrorType {
     FileNotFound;
     FileIsDirectory;
     UnexpectedNode;
+    ReturnOutsideFunction;
+    TypeMismatch;
+    ReturnTypeMismatch;
+    UndefinedVariable;
+    FunctionNotDefined;
+    FunctionParamCountMismatch;
+    FunctionParamTypeMismatch;
 }

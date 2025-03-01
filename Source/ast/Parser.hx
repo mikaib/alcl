@@ -91,7 +91,7 @@ class Parser {
             indent += "    ";
         }
 
-        Logging.print('$indent ${node.type} ${node.value} (${node.line}:${node.column} to ${node.endLine}:${node.endColumn})');
+        Logging.print('$indent ${node.type} ${node.value} (${node.line}:${node.column} to ${node.endLine}:${node.endColumn}) [t: ${node.analysisType}]');
         for (child in node.children) {
             print(child, depth + 1);
         }
@@ -124,7 +124,7 @@ class Parser {
                 case NodeType.FunctionDecl, NodeType.FunctionDeclParam, NodeType.FunctionDeclParamType, NodeType.FunctionDeclReturnType, NodeType.FunctionDeclBody, NodeType.FunctionDeclNativeBody: "lightgreen";
                 case NodeType.FunctionCall, NodeType.FunctionCallParam: "lightcoral";
                 case NodeType.VarDef, NodeType.VarType, NodeType.VarAssign, NodeType.VarValue: "lightyellow";
-                case NodeType.StringLiteral, NodeType.NumberLiteral, NodeType.Identifier: "lightgray";
+                case NodeType.StringLiteral, NodeType.IntLiteral, NodeType.FloatLiteral, NodeType.Identifier: "lightgray";
                 case NodeType.WhileLoop, NodeType.WhileLoopCond, NodeType.WhileLoopBody: "lightpink";
                 case NodeType.ForLoop, NodeType.ForLoopInit, NodeType.ForLoopCond, NodeType.ForLoopIter, NodeType.ForLoopBody: "lightseagreen";
                 case NodeType.Ternary, NodeType.TernaryCond, NodeType.TernaryTrue, NodeType.TernaryFalse: "lightsteelblue";
