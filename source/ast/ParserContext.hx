@@ -313,6 +313,8 @@ class ParserContext {
     }
 
     public function extractPosFromChildren(node: Node, includeNode: Bool = false) {
+        if (node.children.length <= 0) return;
+
         var minLine: Float = includeNode ? node.line : Math.POSITIVE_INFINITY;
         var minCol: Float = includeNode ? node.column : Math.POSITIVE_INFINITY;
         var maxLine: Float = includeNode ? node.endLine : Math.NEGATIVE_INFINITY;

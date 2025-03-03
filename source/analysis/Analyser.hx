@@ -212,6 +212,7 @@ class Analyser {
 
     public function findCastPath(scope: AnalyserScope, from: AnalyserType, to: AnalyserType, isExplicit: Bool = false): Array<AnalyserCastMethod> {
         var queue: Array<{type: AnalyserType, path: Array<AnalyserCastMethod>}> = [{type: from, path: []}];
+
         var visited: Map<String, Bool> = new Map();
 
         while (queue.length > 0) {

@@ -1,6 +1,6 @@
--cp Source
+-cp source
 -main Main
 
 -D analyzer-optimize
 
---hl Binary/Hashlink/out.hl
+--hl binary/hashlink/out.hl

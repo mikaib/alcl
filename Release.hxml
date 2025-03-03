@@ -1,8 +1,8 @@
--cp Source
+-cp source
 -main Main
 
 -D analyzer-optimize
 -D HXCPP_STACK_TRACE
 -D HXCPP_STACK_LINE
 
---cpp Binary/cpp
+--cpp binary/cpp
