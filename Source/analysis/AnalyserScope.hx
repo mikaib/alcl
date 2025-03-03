@@ -6,6 +6,7 @@ class AnalyserScope {
     private var _analyser: Analyser;
     private var _variables: Array<AnalyserVariable>;
     private var _functions: Array<AnalyserFunction>;
+    private var _castMethods: Array<AnalyserCastMethod>;
     private var _varLookup: Map<String, AnalyserVariable>;
     private var _funcLookup: Map<String, AnalyserFunction>;
     private var _operatorResultTypes: Map<String, Map<String, AnalyserType>>;
@@ -17,6 +18,7 @@ class AnalyserScope {
         _funcLookup = [];
         _variables = [];
         _functions = [];
+        _castMethods = [];
         _operatorResultTypes = [];
     }
 
@@ -44,35 +46,43 @@ class AnalyserScope {
         return _funcLookup.get(name);
     }
 
+    public function getCastMethods(): Array<AnalyserCastMethod> {
+        return _castMethods;
+    }
+
+    public function addCastMethod(method: AnalyserCastMethod): Void {
+        _castMethods.push(method);
+    }
+
     public function addOperatorType(aType: AnalyserType, bType: AnalyserType, resultType: AnalyserType, bidirectional: Bool = false): Void {
         if (bidirectional) {
             addOperatorType(bType, aType, resultType, false);
         }
 
-        if (_operatorResultTypes.get(aType) == null) {
-            _operatorResultTypes.set(aType, []);
+        if (_operatorResultTypes.get(aType.toString()) == null) {
+            _operatorResultTypes.set(aType.toString(), []);
         }
 
-        _operatorResultTypes.get(aType).set(bType, resultType);
+        _operatorResultTypes.get(aType.toString()).set(bType.toString(), resultType);
     }
 
     public function findOperatorResultType(aType: AnalyserType, bType: AnalyserType): AnalyserType {
         var aName = aType;
         var bName = bType;
 
-        if (aName == "Unknown" && bType != "Unknown") {
+        if (aName.isUnknown() && !bName.isUnknown()) {
             aName = bType;
         }
 
-        if (bName == "Unknown" && aType != "Unknown") {
+        if (bName.isUnknown() && !aName.isUnknown()) {
             bName = aType;
         }
 
-        var result = _operatorResultTypes.get(aName);
+        var result = _operatorResultTypes.get(aName.toString());
         if (result == null) {
             return null;
         }
-        return result.get(bName);
+        return result.get(bName.toString());
     }
 
     public function setCurrentFunctionNode(node: Node): Void {
@@ -101,12 +111,13 @@ class AnalyserScope {
         _functions.push(func);
         _funcLookup.set(name, func);
     }
-    
+
     public function copyFromScope(scope: AnalyserScope, shallowCopy: Bool = true): Void {
         _variables = shallowCopy ? scope._variables.copy() : scope._variables;
         _functions = shallowCopy ? scope._functions.copy() : scope._functions;
         _varLookup = shallowCopy ? scope._varLookup.copy() : scope._varLookup;
         _funcLookup = shallowCopy ? scope._funcLookup.copy() : scope._funcLookup;
+        _castMethods = shallowCopy ? scope._castMethods.copy() : scope._castMethods;
         _operatorResultTypes = shallowCopy ? scope._operatorResultTypes.copy() : scope._operatorResultTypes;
         _currentFunctionNode = scope._currentFunctionNode;
     }

@@ -4,6 +4,6 @@ import ast.Node;
 @:structInit
 class AnalyserVariable {
     public var name: String;
-    public var type: String;
+    public var type: AnalyserType;
     public var origin: Node;
 }

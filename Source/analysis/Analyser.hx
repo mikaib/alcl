@@ -13,7 +13,16 @@ class Analyser {
     private var _errors: ErrorContainer;
     private var _parser: Parser;
     private var _file: String;
+
     private var _compareOps: Array<String> = ["||", "&&", "|", "^", "&", "==", "!=", "<", "<=", ">", ">=", "!", "~"];
+    private var TInt32: AnalyserType = AnalyserType.createType("Int32");
+    private var TInt64: AnalyserType = AnalyserType.createType("Int64");
+    private var TFloat32: AnalyserType = AnalyserType.createType("Float32");
+    private var TFloat64: AnalyserType = AnalyserType.createType("Float64");
+    private var TBool: AnalyserType = AnalyserType.createType("Bool");
+    private var TCString: AnalyserType = AnalyserType.createType("CString");
+    private var TVoid: AnalyserType = AnalyserType.createType("Void");
+    private var TUnknown: AnalyserType = AnalyserType.createUnknownType();
 
     public function new(parser: Parser, ?file: String) {
         _parser = parser;
@@ -21,29 +30,43 @@ class Analyser {
         _file = file ?? "Internal";
     }
 
-    public function getDefaultType(): AnalyserType {
-        return "Unknown";
-    }
-
-    public function getBasicType(type: String): AnalyserType {
-        return type;
-    }
-
-    public function getVaryingType(types: Array<AnalyserType>): AnalyserType {
-        return 'Varying<${types.join(", ")}>';
-    }
-
     public inline function inferFirstChildOf(node: Node, scope: AnalyserScope): Null<AnalyserType> {
-        if (node.children.length != 0) return inferTypeOf(node.children[0], scope);
-        else return getDefaultType();
+        if (node.children.length != 0) {
+            var child: Node = node.children[0];
+
+            inferType(child, scope);
+            return child.analysisType;
+        } else {
+            return AnalyserType.createUnknownType();
+        }
+    }
+
+    public function tryMatchUserType(node: Node, scope: AnalyserScope, expect: AnalyserType, got: AnalyserType, ?err: ErrorType = ErrorType.TypeMismatch): AnalyserType {
+        if (expect != got) {
+            emitError(node, err, 'expected ${expect} but got ${got}');
+        }
+
+        return got;
     }
 
     /*
-enum NodeType {
+    FunctionDecl;
+    FunctionDeclParam;
+    FunctionDeclParamType;
+    FunctionDeclReturnType;
+    FunctionDeclBody;
+    FunctionDeclNativeBody;
+    FunctionCall;
+    FunctionCallParam;
     VarDef;
     VarType;
     VarAssign;
     VarValue;
+    StringLiteral;
+    FloatLiteral;
+    IntLiteral;
+    BooleanLiteral;
+    Identifier;
     ForLoop;
     ForLoopInit;
     ForLoopCond;
@@ -59,111 +82,29 @@ enum NodeType {
     IfStatementElseIf;
     IfStatementCond;
     IfStatementBody;
+    Ternary;
+    TernaryCond;
+    TernaryTrue;
+    TernaryFalse;
+    UnaryOp;
+    BinaryOp;
+    OperationLeft;
+    OperationRight;
+    SubExpression;
+    Return;
      */
-    public function tryMatchUserType(node: Node, scope: AnalyserScope, expect: AnalyserType, got: AnalyserType, ?err: ErrorType = ErrorType.TypeMismatch): AnalyserType {
-        if (expect != got) {
-            emitError(node, err, 'expected ${expect} but got ${got}');
-        }
-
-        return got;
-    }
-
-    public function inferTypeOf(node: Node, scope: AnalyserScope): Null<AnalyserType> {
-        if (node == null) return null;
-        if (node.analysisType != null) return node.analysisType;
+    public function inferType(node: Node, scope: AnalyserScope): Void {
+        if (node == null) return;
+        if (node.analysisType == null) node.analysisType = AnalyserType.createUnknownType();
         if (node.analysisScope == null) node.analysisScope = scope;
-
-        var resType: Null<AnalyserType> = "Unknown";
+        if (!node.analysisType.equals(TUnknown)) return;
 
         switch(node.type) {
-            case NodeType.StringLiteral:
-                resType = "CString";
-            case NodeType.IntLiteral:
-                resType = "Int32";
-            case NodeType.FloatLiteral:
-                resType = "Float64";
-            case NodeType.BooleanLiteral:
-                resType = "Bool";
-            case NodeType.Identifier:
-                resType = scope.getVariable(node.value)?.type ?? getDefaultType();
-            case NodeType.SubExpression | NodeType.OperationLeft | NodeType.OperationRight | NodeType.UnaryOp | NodeType.TernaryTrue | NodeType.TernaryFalse | NodeType.TernaryCond | NodeType.FunctionCallParam:
-                resType = inferFirstChildOf(node, scope);
-            case NodeType.FunctionDecl:
-                var returnTypeNode: Node = findChildOfType(node, NodeType.FunctionDeclReturnType);
-                var returnType: AnalyserType = returnTypeNode?.value ?? getDefaultType();
-
-                setTypeOfNode(node, returnType, scope);
-                scope.defineFunction(node.value, returnType, [], node);
-            case NodeType.FunctionCall:
-                var functionInfo: AnalyserFunction = scope.getFunction(node.value);
-                if (functionInfo == null) {
-                    emitError(node, ErrorType.FunctionNotDefined, 'Function ${node.value} is not defined');
-                    resType = getDefaultType();
-                } else {
-                    resType = functionInfo.type;
-                }
-            case NodeType.FunctionDeclParam:
-                resType = inferTypeOf(findChildOfType(node, NodeType.FunctionDeclParamType), scope);
-                scope.defineVariable(node.value, resType, node);
-            case NodeType.FunctionDeclParamType:
-                resType = node.value ?? getDefaultType();
-            case NodeType.FunctionDeclReturnType:
-                resType = node.value ?? getDefaultType();
-            case NodeType.Return:
-                resType = inferFirstChildOf(node, scope);
-
-                var functionNode: Node = scope.getCurrentFunctionNode();
-                if (functionNode == null) {
-                    emitError(node, ErrorType.ReturnOutsideFunction, "Return statement outside of function");
-                } else {
-                    var returnType: AnalyserType = getUserSetType(functionNode);
-                    if (returnType != null && resType != returnType) {
-                        resType = tryMatchUserType(node, scope, returnType, resType, ErrorType.ReturnTypeMismatch);
-                    }
-
-                    var returnTypeNode: Node = findChildOfType(functionNode, NodeType.FunctionDeclReturnType);
-                    if (returnTypeNode == null) {
-                        var returnTypeNode: Node = createNode(NodeType.FunctionDeclReturnType, functionNode, null, null, resType);
-                        setTypeOfNode(returnTypeNode, resType, scope);
-                        setTypeOfNode(functionNode, resType, scope);
-                        scope.getFunction(functionNode.value).type = resType;
-                        functionNode.children.unshift(returnTypeNode);
-                    }
-                }
-            case NodeType.FunctionCall:
-            case NodeType.Ternary:
-                var trueCond: Node = findChildOfType(node, NodeType.TernaryTrue);
-                var falseCond: Node = findChildOfType(node, NodeType.TernaryFalse);
-
-                if (trueCond == null || falseCond == null) {
-                    resType = getDefaultType();
-                } else {
-                    var trueCondType: AnalyserType = inferTypeOf(trueCond, scope);
-                    var falseCondType: AnalyserType = inferTypeOf(falseCond, scope);
-                    resType = trueCondType != falseCondType ? getVaryingType([trueCondType, falseCondType]) : trueCondType;
-                }
-            case NodeType.BinaryOp:
-                var left: Node = findChildOfType(node, NodeType.OperationLeft);
-                var right: Node = findChildOfType(node, NodeType.OperationRight);
-
-                if (left == null || right == null) {
-                    resType = getDefaultType();
-                } else {
-                    var leftType: AnalyserType = inferTypeOf(left, scope);
-                    var rightType: AnalyserType = inferTypeOf(right, scope);
-
-                    if (_compareOps.indexOf(node.value) != -1) {
-                        resType = "Bool";
-                    } else {
-                        resType = scope.findOperatorResultType(leftType, rightType) ?? propagateTypeToChildren(node, scope, "Int32"); // default to Int32
-                    }
-                }
+            case NodeType.Root | NodeType.None | NodeType.CCode:
+                return; // skip
             default:
-                resType = getDefaultType();
+                node.analysisType = inferFirstChildOf(node, scope);
         }
-
-        setTypeOfNode(node, resType, scope);
-        return resType;
     }
 
     public function createNode(type: NodeType, parent: Node, ?tokenStart: Token, ?tokenEnd: Token, ?value: String): Node {
@@ -192,17 +133,6 @@ enum NodeType {
         };
 
         _errors.addError(err);
-    }
-
-    public function propagateTypeToChildren(node: Node, scope: AnalyserScope, type: AnalyserType): AnalyserType {
-        for (child in node.children) {
-            if (inferTypeOf(child, scope) == getDefaultType()) {
-                setTypeOfNode(child, type, scope);
-                propagateTypeToChildren(child, scope, type);
-            }
-        }
-
-        return type;
     }
 
     public function findParentOfType(node: Node, type: NodeType): Null<Node> {
@@ -235,7 +165,7 @@ enum NodeType {
         return out;
     }
 
-    public function getUserSetType(node: Node): Null<AnalyserType> {
+    public function getUserSetType(node: Node): String {
         switch(node.type) {
             case NodeType.VarDef:
                 var typeNode: Node = findChildOfType(node, NodeType.VarType);
@@ -247,7 +177,7 @@ enum NodeType {
                 var typeNode: Node = findChildOfType(node, NodeType.FunctionDeclParamType);
                 return typeNode?.value;
             default:
-                return node.analysisType; // default to inferred type
+                return null;
         }
     }
 
@@ -268,7 +198,7 @@ enum NodeType {
     }
 
     public function runAtNode(node: Node, scope: AnalyserScope): Void {
-        inferTypeOf(node, scope);
+        inferType(node, scope);
 
         var subScope: AnalyserScope = getNodeScope(node, scope);
         for (child in node.children) {
@@ -280,19 +210,48 @@ enum NodeType {
         return _errors;
     }
 
+    public function findCastPath(scope: AnalyserScope, from: AnalyserType, to: AnalyserType, isExplicit: Bool = false): Array<AnalyserCastMethod> {
+        var queue: Array<{type: AnalyserType, path: Array<AnalyserCastMethod>}> = [{type: from, path: []}];
+        var visited: Map<String, Bool> = new Map();
+
+        while (queue.length > 0) {
+            var current = queue.shift();
+            var currentType = current.type;
+            var currentPath = current.path;
+
+            if (currentType.equals(to)) {
+                return currentPath;
+            }
+
+            if (visited.exists(currentType.toString())) continue;
+            visited.set(currentType.toString(), true);
+
+            for (c in scope.getCastMethods()) {
+                if (c.getFrom().equals(currentType) && (isExplicit || c.isImplicit())) {
+                    queue.push({
+                        type: c.getTo(),
+                        path: currentPath.concat([c])
+                    });
+                }
+            }
+        }
+
+        return [];
+    }
+
     public function run(): Void {
         var scope: AnalyserScope = new AnalyserScope(this);
-        scope.addOperatorType("Float32", "Float32", "Float32", true);
-        scope.addOperatorType("Float64", "Float64", "Float64", true);
-        scope.addOperatorType("Float32", "Float64", "Float64", true);
-        scope.addOperatorType("Int32", "Float32", "Float32", true);
-        scope.addOperatorType("Int32", "Float64", "Float64", true);
-        scope.addOperatorType("Int64", "Float32", "Float64", true);
-        scope.addOperatorType("Int64", "Float64", "Float64", true);
-        scope.addOperatorType("Int32", "Int32", "Int32", true);
-        scope.addOperatorType("Int64", "Int64", "Int64", true);
-        scope.addOperatorType("Int32", "Int64", "Int64", true);
+        scope.addOperatorType(TInt32, TInt32, TInt32, true); // Int32 + Int32 = Int32
+        scope.addOperatorType(TInt64, TInt64, TInt64, true); // Int64 + Int64 = Int64
+        scope.addOperatorType(TFloat32, TFloat32, TFloat32, true); // Float32 + Float32 = Float32
+        scope.addOperatorType(TFloat64, TFloat64, TFloat64, true); // Float64 + Float64 = Float64
 
+        scope.addCastMethod(AnalyserCastMethod.usingCast(TInt32, TInt64, true));
+        scope.addCastMethod(AnalyserCastMethod.usingCast(TInt32, TFloat32, true));
+        scope.addCastMethod(AnalyserCastMethod.usingCast(TInt32, TFloat64, true));
+        scope.addCastMethod(AnalyserCastMethod.usingCast(TInt64, TFloat64, true));
+
+        // trace(findCastPath(scope, AnalyserType.createType("Int32"), AnalyserType.createType("Float64")));
         runAtNode(_parser.getRoot(), scope);
     }
 
