@@ -247,12 +247,11 @@ class Analyser {
         scope.addOperatorType(TFloat32, TFloat32, TFloat32, true); // Float32 + Float32 = Float32
         scope.addOperatorType(TFloat64, TFloat64, TFloat64, true); // Float64 + Float64 = Float64
 
-        scope.addCastMethod(AnalyserCastMethod.usingCast(TInt32, TInt64, true));
         scope.addCastMethod(AnalyserCastMethod.usingCast(TInt32, TFloat32, true));
-        scope.addCastMethod(AnalyserCastMethod.usingCast(TInt32, TFloat64, true));
         scope.addCastMethod(AnalyserCastMethod.usingCast(TInt64, TFloat64, true));
+        scope.addCastMethod(AnalyserCastMethod.usingCast(TFloat32, TFloat64, true));
+        trace(findCastPath(scope, AnalyserType.createType("Int32"), AnalyserType.createType("Float64")));
 
-        // trace(findCastPath(scope, AnalyserType.createType("Int32"), AnalyserType.createType("Float64")));
         runAtNode(_parser.getRoot(), scope);
     }
 
