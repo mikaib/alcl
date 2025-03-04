@@ -22,7 +22,7 @@ jobs:
     - name: Build Compiler
       run: haxe Release.hxml
     - name: Move Compiler
-      run: mv ./Binary/cpp/Main ./ALCL
+      run: mv ./binary/cpp/Main ./ALCL
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
@@ -43,7 +43,7 @@ jobs:
       - name: Build Compiler
         run: haxe Release.hxml
       - name: Move Compiler
-        run: mv ./Binary/cpp/Main.exe ./ALCL.exe -force
+        run: mv ./binary/cpp/Main.exe ./ALCL.exe -force
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -62,13 +62,13 @@ jobs:
       - name: Generate Tests
         run: |
           chmod +x ./ALCL
-          chmod +x ./Scripts/git_test_linux.sh
-          ./Scripts/git_test_linux.sh
+          chmod +x ./scripts/git_test_linux.sh
+          ./scripts/git_test_linux.sh
       - name: List Files (debugging)
         run: tree
       - name: Run Tests
         run: |
-          cd ./Env/Out/Tests/build
+          cd ./env/out/tests/build
           chmod +x ./output
           ./output
   run-tests-windows:
@@ -83,10 +83,10 @@ jobs:
           name: alcl-windows
       - name: Generate Tests
         run: |
-          ./Scripts/git_test_windows
+          ./scripts/git_test_windows
       - name: List Files (debugging)
         run: tree
       - name: Run Tests
         run: |
-          cd ./Env/Out/Tests/build/Release
+          cd ./env/out/tests/build/release
           ./output
