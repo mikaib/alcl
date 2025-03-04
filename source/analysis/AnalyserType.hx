@@ -1,6 +1,9 @@
 package analysis;
 
+// A general type can be hinted, modified or transformed in any way.
 class AnalyserType {
+
+    private var _type: Null<String>;
 
     public static function createUnknownType(): AnalyserType {
         return new AnalyserType();
@@ -12,10 +15,36 @@ class AnalyserType {
         return analyserType;
     }
 
-    private var _type: Null<String>;
+    public static function createFixedType(typeName: String): AnalyserFixedType {
+        var analyserType = new AnalyserFixedType();
+        analyserType._type = typeName;
+        return analyserType;
+    }
+
+    public static function fromFixed(other: AnalyserFixedType): AnalyserType {
+        var analyserType = new AnalyserType();
+        analyserType._type = other._type;
+        return analyserType;
+    }
 
     private function new() {
         _type = null;
+    }
+
+    public function toFixed(): AnalyserFixedType {
+        var analyserType = new AnalyserFixedType();
+        analyserType._type = _type;
+        return analyserType;
+    }
+
+    public function toMutableType(): AnalyserType {
+        var analyserType = new AnalyserType();
+        analyserType._type = _type;
+        return analyserType;
+    }
+
+    public function setType(typeName: String): Void {
+        _type = typeName;
     }
 
     public function hintIfUnknown(typeName: String): Void {

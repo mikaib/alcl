@@ -15,14 +15,14 @@ class Analyser {
     private var _file: String;
 
     private var _compareOps: Array<String> = ["||", "&&", "|", "^", "&", "==", "!=", "<", "<=", ">", ">=", "!", "~"];
-    private var TInt32: AnalyserType = AnalyserType.createType("Int32");
-    private var TInt64: AnalyserType = AnalyserType.createType("Int64");
-    private var TFloat32: AnalyserType = AnalyserType.createType("Float32");
-    private var TFloat64: AnalyserType = AnalyserType.createType("Float64");
-    private var TBool: AnalyserType = AnalyserType.createType("Bool");
-    private var TCString: AnalyserType = AnalyserType.createType("CString");
-    private var TVoid: AnalyserType = AnalyserType.createType("Void");
-    private var TUnknown: AnalyserType = AnalyserType.createUnknownType();
+    private var TInt32: AnalyserFixedType = AnalyserType.createFixedType("Int32");
+    private var TInt64: AnalyserFixedType = AnalyserType.createFixedType("Int64");
+    private var TFloat32: AnalyserFixedType = AnalyserType.createFixedType("Float32");
+    private var TFloat64: AnalyserFixedType = AnalyserType.createFixedType("Float64");
+    private var TBool: AnalyserFixedType = AnalyserType.createFixedType("Bool");
+    private var TCString: AnalyserFixedType = AnalyserType.createFixedType("CString");
+    private var TVoid: AnalyserFixedType = AnalyserType.createFixedType("Void");
+    private var TUnknown: AnalyserFixedType = AnalyserType.createUnknownType().toFixed();
 
     public function new(parser: Parser, ?file: String) {
         _parser = parser;
@@ -88,9 +88,6 @@ class Analyser {
     TernaryFalse;
     UnaryOp;
     BinaryOp;
-    OperationLeft;
-    OperationRight;
-    SubExpression;
     Return;
      */
     public function inferType(node: Node, scope: AnalyserScope): Void {
@@ -165,19 +162,19 @@ class Analyser {
         return out;
     }
 
-    public function getUserSetType(node: Node): String {
+    public function getUserSetType(node: Node): AnalyserType {
         switch(node.type) {
             case NodeType.VarDef:
                 var typeNode: Node = findChildOfType(node, NodeType.VarType);
-                return typeNode?.value;
+                return AnalyserType.createType(typeNode?.value);
             case NodeType.FunctionDecl:
                 var typeNode: Node = findChildOfType(node, NodeType.FunctionDeclReturnType);
-                return typeNode?.value;
+                return AnalyserType.createType(typeNode?.value);
             case NodeType.FunctionDeclParam:
                 var typeNode: Node = findChildOfType(node, NodeType.FunctionDeclParamType);
-                return typeNode?.value;
+                return AnalyserType.createType(typeNode?.value);
             default:
-                return null;
+                return AnalyserType.createUnknownType();
         }
     }
 
@@ -197,12 +194,26 @@ class Analyser {
         }
     }
 
+    public function getTypeMismatchErr(node: Node): ErrorType {
+        switch (node.type) {
+            case NodeType.Return:
+                return ErrorType.ReturnTypeMismatch;
+            default:
+                return ErrorType.TypeMismatch;
+        }
+    }
+
     public function runAtNode(node: Node, scope: AnalyserScope): Void {
         inferType(node, scope);
 
         var subScope: AnalyserScope = getNodeScope(node, scope);
         for (child in node.children) {
             runAtNode(child, subScope);
+        }
+
+        var userType: AnalyserType = getUserSetType(node);
+        if (!node.analysisType.isUnknown() && !userType.isUnknown()) {
+            tryMatchUserType(node, scope, userType, node.analysisType, getTypeMismatchErr(node));
         }
     }
 
@@ -247,10 +258,10 @@ class Analyser {
         scope.addOperatorType(TFloat32, TFloat32, TFloat32, true); // Float32 + Float32 = Float32
         scope.addOperatorType(TFloat64, TFloat64, TFloat64, true); // Float64 + Float64 = Float64
 
+        scope.addCastMethod(AnalyserCastMethod.usingCast(TInt32, TInt64, true));
         scope.addCastMethod(AnalyserCastMethod.usingCast(TInt32, TFloat32, true));
+        scope.addCastMethod(AnalyserCastMethod.usingCast(TInt32, TFloat64, true));
         scope.addCastMethod(AnalyserCastMethod.usingCast(TInt64, TFloat64, true));
-        scope.addCastMethod(AnalyserCastMethod.usingCast(TFloat32, TFloat64, true));
-        trace(findCastPath(scope, AnalyserType.createType("Int32"), AnalyserType.createType("Float64")));
 
         runAtNode(_parser.getRoot(), scope);
     }
