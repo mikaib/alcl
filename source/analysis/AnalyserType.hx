@@ -4,6 +4,7 @@ package analysis;
 class AnalyserType {
 
     private var _type: Null<String>;
+    private var _onChangeCallbacks: Array<Void->Void>;
 
     public static function createUnknownType(): AnalyserType {
         return new AnalyserType();
@@ -29,6 +30,15 @@ class AnalyserType {
 
     private function new() {
         _type = null;
+        _onChangeCallbacks = [];
+    }
+
+    public function onTypeChange(cb: Void->Void, runImmediately: Bool = true): Void {
+        _onChangeCallbacks.push(cb);
+
+        if (runImmediately) {
+            cb();
+        }
     }
 
     public function toFixed(): AnalyserFixedType {
@@ -45,6 +55,10 @@ class AnalyserType {
 
     public function setType(typeName: String): Void {
         _type = typeName;
+
+        for (cb in _onChangeCallbacks) {
+            cb();
+        }
     }
 
     public function hintIfUnknown(typeName: String): Void {
