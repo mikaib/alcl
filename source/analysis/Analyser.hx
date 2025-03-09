@@ -64,7 +64,6 @@ class Analyser {
     }
 
     /*
-    VarAssign;
     ForLoop;
     ForLoopInit;
     ForLoopCond;

@@ -293,9 +293,10 @@ class Printer {
     public function printVarDef(node: Node, indent: Int, inlineNode: Bool): String {
         var value = findChildOfType(node, NodeType.VarValue);
         if (value == null) {
-            value = {
-                type: NodeType.Identifier,
-                value: "NULL"
+            if (inlineNode) {
+                return '(${_types.convertTypeAlclToC(node.analysisType.toString())} ${node.value})';
+            } else {
+                return '${_types.convertTypeAlclToC(node.analysisType.toString())} ${node.value};\n';
             }
         }
 
