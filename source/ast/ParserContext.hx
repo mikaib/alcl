@@ -425,9 +425,10 @@ class ParserContext {
                     depth++;
                 }
 
-                if (isOperator(_tokens[currentIndex]) && getPrecedence(_tokens[currentIndex].type) < (precedence + 1) && depth == 0) {
+                if (isOperator(_tokens[currentIndex]) && getPrecedence(_tokens[currentIndex].type) < (precedence + 1) && depth == 0 && rightTokens.length > 0) {
                     break;
                 }
+
                 if (_tokens[currentIndex].type == TokenType.RightParen) {
                     depth--;
                 }
@@ -465,7 +466,7 @@ class ParserContext {
                 if (_tokens[currentIndex].type == TokenType.LeftParen) {
                     depth++;
                 }
-                if (isOperator(_tokens[currentIndex]) && getPrecedence(_tokens[currentIndex].type) < (precedence + 1) && depth == 0) {
+                if (isOperator(_tokens[currentIndex]) && getPrecedence(_tokens[currentIndex].type) < (precedence + 1) && depth == 0 && rightTokens.length > 0) {
                     break;
                 }
                 if (_tokens[currentIndex].type == TokenType.RightParen) {
