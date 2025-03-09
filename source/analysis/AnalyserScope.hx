@@ -9,7 +9,6 @@ class AnalyserScope {
     private var _castMethods: Array<AnalyserCastMethod>;
     private var _varLookup: Map<String, AnalyserVariable>;
     private var _funcLookup: Map<String, AnalyserFunction>;
-    private var _operatorResultTypes: Map<String, Map<String, AnalyserType>>;
     private var _currentFunctionNode: Node;
 
     public function new(analyser: Analyser) {
@@ -19,7 +18,6 @@ class AnalyserScope {
         _variables = [];
         _functions = [];
         _castMethods = [];
-        _operatorResultTypes = [];
     }
 
     public function isInFunction(): Bool {
@@ -54,37 +52,6 @@ class AnalyserScope {
         _castMethods.push(method);
     }
 
-    public function addOperatorType(aType: AnalyserType, bType: AnalyserType, resultType: AnalyserType, bidirectional: Bool = false): Void {
-        if (bidirectional) {
-            addOperatorType(bType, aType, resultType, false);
-        }
-
-        if (_operatorResultTypes.get(aType.toString()) == null) {
-            _operatorResultTypes.set(aType.toString(), []);
-        }
-
-        _operatorResultTypes.get(aType.toString()).set(bType.toString(), resultType);
-    }
-
-    public function findOperatorResultType(aType: AnalyserType, bType: AnalyserType): AnalyserType {
-        var aName = aType;
-        var bName = bType;
-
-        if (aName.isUnknown() && !bName.isUnknown()) {
-            aName = bType;
-        }
-
-        if (bName.isUnknown() && !aName.isUnknown()) {
-            bName = aType;
-        }
-
-        var result = _operatorResultTypes.get(aName.toString());
-        if (result == null) {
-            return null;
-        }
-        return result.get(bName.toString());
-    }
-
     public function setCurrentFunctionNode(node: Node): Void {
         _currentFunctionNode = node;
     }
@@ -100,7 +67,7 @@ class AnalyserScope {
         _varLookup.set(name, variable);
     }
 
-    public function defineFunction(name: String, type: String, params: Array<AnalyserFunctionParam>, origin: Node): Void {
+    public function defineFunction(name: String, type: AnalyserType, params: Array<AnalyserFunctionParam>, origin: Node): Void {
         var func: AnalyserFunction = {
             name: name,
             type: type,
@@ -118,7 +85,6 @@ class AnalyserScope {
         _varLookup = shallowCopy ? scope._varLookup.copy() : scope._varLookup;
         _funcLookup = shallowCopy ? scope._funcLookup.copy() : scope._funcLookup;
         _castMethods = shallowCopy ? scope._castMethods.copy() : scope._castMethods;
-        _operatorResultTypes = shallowCopy ? scope._operatorResultTypes.copy() : scope._operatorResultTypes;
         _currentFunctionNode = scope._currentFunctionNode;
     }
 

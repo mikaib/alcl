@@ -16,9 +16,8 @@ class Node {
     public var endColumn: Int = 0;
     public var analysisType: Null<AnalyserType> = null;
     public var analysisScope: Null<AnalyserScope> = null;
-    public var analysisCast: Null<AnalyserCastMethod> = null;
 
-    public function deepCopy(addParent: Bool = true): Node {
+    public function deepCopy(addParent: Bool = true, linkedType: Bool = false): Node {
         var node: Node = {
             type: type,
             value: value,
@@ -27,7 +26,8 @@ class Node {
             line: line,
             column: column,
             endLine: endLine,
-            endColumn: endColumn
+            endColumn: endColumn,
+            analysisType: linkedType ? analysisType : analysisType.toMutableType(),
         }
         for (child in children) {
             node.children.push(child.deepCopy(addParent));

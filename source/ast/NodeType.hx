@@ -4,6 +4,7 @@ enum NodeType {
     None;
     Root;
     CCode;
+    Cast;
     FunctionDecl;
     FunctionDeclParam;
     FunctionDeclParamType;

@@ -8,9 +8,16 @@ enum ErrorType {
     UnexpectedNode;
     ReturnOutsideFunction;
     TypeMismatch;
+    TypeKindMismatch;
+    TypeInferenceError;
+    TypeCastError;
     ReturnTypeMismatch;
     UndefinedVariable;
     FunctionNotDefined;
     FunctionParamCountMismatch;
     FunctionParamTypeMismatch;
+    UnknownUnaryOp;
+    TernaryMismatch;
+    MissingCondition;
+    MissingBody;
 }

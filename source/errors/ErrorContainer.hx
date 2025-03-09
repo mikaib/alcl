@@ -4,16 +4,25 @@ import util.Logging;
 class ErrorContainer {
 
     private var _errors: Array<String>;
+    private var _errorObjs: Array<Error>;
 
     public function new() {
-        _errors = new Array<String>();
+        _errors = [];
+        _errorObjs = [];
     }
 
     /**
      * Returns the errors as a string.
      */
     public function addError(error: Error) {
+        for (e in _errorObjs) {
+            if (e.equals(error)) {
+                return;
+            }
+        }
+
         _errors.push(error.toString());
+        _errorObjs.push(error);
     }
 
     /**

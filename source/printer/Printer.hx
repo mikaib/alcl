@@ -136,6 +136,8 @@ class Printer {
                 out += printChildren(node);
             case NodeType.CCode:
                 out += node.value + (inlineNode ? "" : "\n");
+            case NodeType.Cast:
+                out += '(${_types.convertTypeAlclToC(node.value)})(${printChildren(node, true)})';
             default:
         }
 
@@ -208,27 +210,24 @@ class Printer {
     }
 
     public function printFunctionDecl(node: Node, indent: Int): String {
-        var returnType = findChildOfType(node, NodeType.FunctionDeclReturnType)?.value ?? "Void";
-
         var paramStr = "";
         var params = findAllChildrenOfType(node, NodeType.FunctionDeclParam);
         for (param in params) {
-            var paramType = findChildOfType(param, NodeType.FunctionDeclParamType)?.value ?? "void";
-            paramStr += '${_types.convertTypeAlclToC(paramType)} ${param.value}, ';
+            paramStr += '${_types.convertTypeAlclToC(param.analysisType.toString())} ${param.value}, ';
         }
         paramStr = paramStr.substr(0, paramStr.length - 2);
 
-        _funcDefs.push('${_types.convertTypeAlclToC(returnType)} ${node.value}(${paramStr});\n');
+        _funcDefs.push('${_types.convertTypeAlclToC(node.analysisType.toString())} ${node.value}(${paramStr});\n');
 
         var prefix = "";
         var body = findChildOfType(node, NodeType.FunctionDeclBody);
         if (body != null) {
-            return '${prefix}${_types.convertTypeAlclToC(returnType)} ${node.value}(${paramStr}) {\n${replaceLast(printNode(body, indent + 1), "\n", "")}\n}\n\n';
+            return '${prefix}${_types.convertTypeAlclToC(node.analysisType.toString())} ${node.value}(${paramStr}) {\n${replaceLast(printNode(body, indent + 1), "\n", "")}\n}\n\n';
         }
 
         var nativeBody = findChildOfType(node, NodeType.FunctionDeclNativeBody);
         if (nativeBody != null) {
-            return '${prefix}${_types.convertTypeAlclToC(returnType)} ${node.value}(${paramStr}) {${nativeBody.value}}\n\n';
+            return '${prefix}${_types.convertTypeAlclToC(node.analysisType.toString())} ${node.value}(${paramStr}) {${nativeBody.value}}\n\n';
         }
 
         return "";
@@ -290,14 +289,6 @@ class Printer {
     }
 
     public function printVarDef(node: Node, indent: Int, inlineNode: Bool): String {
-        var type = findChildOfType(node, NodeType.VarType);
-        if (type == null) {
-            type = {
-                type: NodeType.VarType,
-                value: "void"
-            }
-        }
-
         var value = findChildOfType(node, NodeType.VarValue);
         if (value == null) {
             value = {
@@ -307,9 +298,9 @@ class Printer {
         }
 
         if (inlineNode) {
-            return '(${_types.convertTypeAlclToC(type.value)} ${node.value} = ${printChildren(value, true)})';
+            return '(${_types.convertTypeAlclToC(node.analysisType.toString())} ${node.value} = ${printChildren(value, true)})';
         } else {
-            return '${_types.convertTypeAlclToC(type.value)} ${node.value} = ${printChildren(value, true)};\n';
+            return '${_types.convertTypeAlclToC(node.analysisType.toString())} ${node.value} = ${printChildren(value, true)};\n';
         }
     }
 

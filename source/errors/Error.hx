@@ -22,4 +22,12 @@ class Error {
         return str;
     }
 
+    public function equals(other: Error): Bool {
+        return this.message == other.message &&
+        this.type == other.type &&
+        this.position.file == other.position.file &&
+        this.position.column == other.position.column &&
+        this.position.line == other.position.line;
+    }
+
 }

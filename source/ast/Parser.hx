@@ -91,7 +91,7 @@ class Parser {
             indent += "    ";
         }
 
-        Logging.print('$indent ${node.type} ${node.value} (${node.line}:${node.column} to ${node.endLine}:${node.endColumn}) [t: ${node.analysisType}]');
+        Logging.print('$indent ${node.type} ${node.value} (${node.line}:${node.column} to ${node.endLine}:${node.endColumn}) [t: ${node.analysisType.toDebugString()}]');
         for (child in node.children) {
             print(child, depth + 1);
         }

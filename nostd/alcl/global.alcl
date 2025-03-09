@@ -1,0 +1,7 @@
+#ctype CString "char*"
+#ctype Int32 "int"
+#ctype Int64 "long long"
+#ctype Float32 "float"
+#ctype Float64 "double"
+#ctype Bool "unsigned char"
+#ctype Void "void"
