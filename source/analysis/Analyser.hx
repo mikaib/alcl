@@ -273,6 +273,7 @@ class Analyser {
         if ((left.analysisType.isUnknown() && !left.analysisType.isNull()) || (right.analysisType.isUnknown() && !right.analysisType.isNull())) {
             if (_compareOps.contains(node.value)) {
                 // when comparing one unknown type with a known type, we hint the known type to the unknown type.
+                // when we compare two unknown types, one will be hinted to Int32 and the other to the now known type (Int32).
                 left.analysisType.hintUsage(right.analysisType);
                 right.analysisType.hintUsage(left.analysisType);
             }

@@ -10,6 +10,9 @@ func abc() {
 
 func main(a, b) {
     var q = null;
+    //var w = null;
+
+    // if (q == w) {}
     // q = 1.0;
     if (null == null) {}
     if (true == q) {}
