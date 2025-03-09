@@ -1,6 +1,4 @@
 ### todo:
-- add analyser (verify ast, infer types, implicit casts, operator overloading, check return branches, etc)
-- infer function param types from usages
 - allow analyser to morph varassign/vardecl based on the AnalyserScope
 - make for loops declare variables in the "init" part, so that "i = 0" will always work even if not declared.
 - add local functions that take in the current scope
@@ -18,6 +16,8 @@
 - basic standard lib
 
 done:
+- add analyser (verify ast, infer types, implicit casts, operator overloading, check return branches, etc)
+- infer function param types from usages
 - fix for loops to be it's own thing instead of syntactic sugar for while loops
 - add ternary conditionals
 - add for loops

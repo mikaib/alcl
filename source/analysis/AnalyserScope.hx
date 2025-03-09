@@ -3,12 +3,15 @@ import ast.Node;
 
 class AnalyserScope {
 
+    private static var _count: Int = 0;
+
     private var _analyser: Analyser;
     private var _variables: Array<AnalyserVariable>;
     private var _functions: Array<AnalyserFunction>;
     private var _castMethods: Array<AnalyserCastMethod>;
     private var _varLookup: Map<String, AnalyserVariable>;
     private var _funcLookup: Map<String, AnalyserFunction>;
+    private var _id: Int;
     private var _currentFunctionNode: Node;
 
     public function new(analyser: Analyser) {
@@ -18,6 +21,7 @@ class AnalyserScope {
         _variables = [];
         _functions = [];
         _castMethods = [];
+        _id = _count++;
     }
 
     public function isInFunction(): Bool {
@@ -56,11 +60,12 @@ class AnalyserScope {
         _currentFunctionNode = node;
     }
 
-    public function defineVariable(name: String, type: AnalyserType, node: Node): Void {
+    public function defineVariable(name: String, type: AnalyserType, node: Node, initialized: Bool = true): Void {
         var variable: AnalyserVariable = {
             name: name,
             type: type,
-            origin: node
+            origin: node,
+            isInitialized: initialized
         };
 
         _variables.push(variable);
@@ -86,6 +91,10 @@ class AnalyserScope {
         _funcLookup = shallowCopy ? scope._funcLookup.copy() : scope._funcLookup;
         _castMethods = shallowCopy ? scope._castMethods.copy() : scope._castMethods;
         _currentFunctionNode = scope._currentFunctionNode;
+    }
+
+    public function toDebugString(): String {
+        return '#' + _id;
     }
 
 }

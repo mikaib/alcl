@@ -22,6 +22,7 @@ class Analyser {
     private var TBool: AnalyserFixedType = AnalyserType.createFixedType("Bool");
     private var TCString: AnalyserFixedType = AnalyserType.createFixedType("CString");
     private var TVoid: AnalyserFixedType = AnalyserType.createFixedType("Void");
+    private var TNull: AnalyserFixedType = AnalyserType.createFixedType("Null");
     private var TUnknown: AnalyserFixedType = AnalyserType.createUnknownType().toFixed();
 
     public function new(parser: Parser, ?file: String) {
@@ -63,10 +64,7 @@ class Analyser {
     }
 
     /*
-    VarDef;
-    VarType;
     VarAssign;
-    VarValue;
     ForLoop;
     ForLoopInit;
     ForLoopCond;
@@ -75,16 +73,18 @@ class Analyser {
     WhileLoop;
     WhileLoopCond;
     WhileLoopBody;
-    LoopBreak;
-    LoopContinue;
      */
     public function inferType(node: Node, scope: AnalyserScope): Void {
         if (node == null) return;
         if (node.analysisType == null) node.analysisType = AnalyserType.createUnknownType();
         if (node.analysisScope == null) node.analysisScope = scope;
-        if (!node.analysisType.equals(TUnknown)) return;
+        if (!node.analysisType.isUnknown()) return;
 
         switch(node.type) {
+            case NodeType.VarDef:
+                tryTypeVariableDefinition(node, scope);
+            case NodeType.VarAssign:
+                tryTypeVariableAssignment(node, scope);
             case NodeType.BinaryOp:
                 tryTypeBinaryOperator(node, scope);
             case NodeType.UnaryOp:
@@ -97,10 +97,12 @@ class Analyser {
                 tryTypeTernary(node, scope);
             case NodeType.FunctionCall:
                 tryTypeFunctionCall(node, scope);
+            case NodeType.NullLiteral:
+                node.analysisType = AnalyserType.fromFixed(TNull);
             case NodeType.StringLiteral:
                 node.analysisType = AnalyserType.fromFixed(TCString);
             case NodeType.FloatLiteral:
-                node.analysisType = AnalyserType.fromFixed(TFloat64);
+                node.analysisType = AnalyserType.fromFixed(TFloat32);
             case NodeType.IntLiteral:
                 node.analysisType = AnalyserType.fromFixed(TInt32);
             case NodeType.BooleanLiteral:
@@ -110,6 +112,46 @@ class Analyser {
             default:
                 node.analysisType = inferFirstChildOf(node, scope);
         }
+    }
+
+    public function tryTypeVariableAssignment(node: Node, scope: AnalyserScope): Void {
+        var valueNode: Node = findChildOfType(node, NodeType.VarValue);
+        if (valueNode == null) {
+            emitError(node, ErrorType.GenericError, 'missing value node in assignment');
+            return;
+        }
+
+        var variable: AnalyserVariable = scope.getVariable(node.value);
+        if (variable == null) {
+            emitError(node, ErrorType.UndefinedVariable, 'unknown variable ${node.value}');
+            return;
+        }
+
+        if (variable.type.isUnknown()) {
+            inferType(valueNode, scope);
+            variable.type.setType(valueNode.analysisType);
+        }
+
+        variable.isInitialized = true;
+        node.analysisType = variable.type;
+    }
+
+    public function tryTypeVariableDefinition(node: Node, scope: AnalyserScope): Void {
+        var typeNode: Node = findChildOfType(node, NodeType.VarType);
+        var valueNode: Node = findChildOfType(node, NodeType.VarValue);
+        var initialized: Bool = false;
+
+        if (valueNode != null) {
+            inferType(valueNode, scope);
+            node.analysisType.hintUsage(valueNode.analysisType);
+            initialized = true;
+        }
+
+        if (typeNode != null) {
+            node.analysisType.setTypeStr(typeNode.value);
+        }
+
+        scope.defineVariable(node.value, node.analysisType, node, initialized);
     }
 
     public function tryTypeFunctionCall(node: Node, scope: AnalyserScope): Void {
@@ -175,6 +217,11 @@ class Analyser {
         }
 
         node.analysisType = scopeVariable.type;
+
+        if (!scopeVariable.isInitialized) {
+            emitError(node, ErrorType.UninitializedVariable, 'usage of variable ${node.value} before initialization');
+            return;
+        }
     }
 
     public function tryTypeFunctionDecl(node: Node, scope: AnalyserScope): Void {
@@ -203,7 +250,7 @@ class Analyser {
         }
 
         node.analysisType.hintUsage(TVoid.toMutableType());
-        scope.defineFunction(node.value, node.analysisType, analyserFuncParams, node);
+        node.parent.analysisScope.defineFunction(node.value, node.analysisType, analyserFuncParams, node);
     }
 
     public function tryTypeBinaryOperator(node: Node, scope: AnalyserScope): Void {
@@ -223,10 +270,12 @@ class Analyser {
         inferType(left, scope);
         inferType(right, scope);
 
-        if (left.analysisType.equals(TUnknown) || right.analysisType.equals(TUnknown)) {
-            // NOTE: this can be cool in some cases but it could also become annoying verrryyy easily... leaving it out for now.
-            // left.analysisType.hintUsage(right.analysisType);
-            // right.analysisType.hintUsage(left.analysisType);
+        if ((left.analysisType.isUnknown() && !left.analysisType.isNull()) || (right.analysisType.isUnknown() && !right.analysisType.isNull())) {
+            if (_compareOps.contains(node.value)) {
+                // when comparing one unknown type with a known type, we hint the known type to the unknown type.
+                left.analysisType.hintUsage(right.analysisType);
+                right.analysisType.hintUsage(left.analysisType);
+            }
 
             left.analysisType.hintUsage(TInt32);
             right.analysisType.hintUsage(TInt32);
@@ -273,6 +322,14 @@ class Analyser {
 
         // then we check for node-specific type checks
         switch(node.type) {
+            case NodeType.VarAssign:
+                verifyVariableAssignment(node, scope);
+            case NodeType.VarDef:
+                verifyVariableDefinition(node, scope);
+            case NodeType.LoopContinue:
+                verifyLoopControl(node, scope, ErrorType.ContineOutsideLoop);
+            case NodeType.LoopBreak:
+                verifyLoopControl(node, scope, ErrorType.BreakOutsideLoop);
             case NodeType.IfStatement:
                 verifyIfStatement(node, scope, null, true);
             case NodeType.IfStatementElseIf:
@@ -293,6 +350,107 @@ class Analyser {
                 node.analysisType.applyHintedUsageIfUnknown();
             default:
                 return;
+        }
+    }
+
+    public function verifyVariableAssignment(node: Node, scope: AnalyserScope): Void {
+        var valueNode: Node = findChildOfType(node, NodeType.VarValue);
+        if (valueNode == null) {
+            emitError(node, ErrorType.GenericError, 'missing value node in assignment');
+            return;
+        }
+
+        var variable: AnalyserVariable = scope.getVariable(node.value);
+        if (variable == null) {
+            emitError(node, ErrorType.UndefinedVariable, 'unknown variable ${node.value}');
+            return;
+        }
+
+        inferType(valueNode, scope);
+        valueNode.analysisType.applyHintedUsageIfUnknown();
+
+        if (!variable.type.equals(valueNode.analysisType)) {
+            var castPath = findCastPath(scope, valueNode.analysisType, variable.type);
+            if (castPath.length > 0) {
+                castNodeTo(valueNode.children[0], scope, variable.type);
+                return;
+            }
+
+            emitError(node, ErrorType.TypeMismatch, 'expected ${variable.type} but got ${valueNode.analysisType}');
+        }
+    }
+
+    public function verifyVariableDefinition(node: Node, scope: AnalyserScope): Void {
+        var valueNode: Node = findChildOfType(node, NodeType.VarValue);
+        if (valueNode == null) {
+            var typeNode: Node = findChildOfType(node, NodeType.VarType);
+            if (typeNode == null) {
+                if (node.analysisType.isUnknown()) {
+                    emitError(node, ErrorType.GenericError, 'cannot determine type of variable definition ${node.value}');
+                }
+                return;
+            }
+
+            node.analysisType.setTypeStr(typeNode.value);
+
+            var valueNodeType: NodeType = NodeType.NullLiteral;
+            var valueNodeValue: String = 'null';
+
+            if (node.analysisType.isBooleanType()) {
+                valueNodeType = NodeType.BooleanLiteral;
+                valueNodeValue = 'false';
+            } else if (node.analysisType.isFloatingPointType()) {
+                valueNodeType = NodeType.FloatLiteral;
+                valueNodeValue = '0.0';
+            } else if (node.analysisType.isIntegerType()) {
+                valueNodeType = NodeType.IntLiteral;
+                valueNodeValue = '0';
+            }
+
+            valueNode = createNode(NodeType.VarValue, node, null, null, null);
+            valueNode.analysisType = AnalyserType.createUnknownType();
+            valueNode.analysisScope = scope;
+            valueNode.parent = node;
+
+            var valueNodeInternal = createNode(valueNodeType, node, null, null, valueNodeValue);
+            valueNode.children.push(valueNodeInternal);
+            valueNodeInternal.analysisType = AnalyserType.createUnknownType();
+            valueNodeInternal.analysisScope = scope;
+            valueNodeInternal.parent = valueNode;
+
+            node.children.push(valueNode);
+        }
+
+        valueNode.analysisType = valueNode.children[0].analysisType;
+        inferType(valueNode, scope);
+
+        var typeNode: Node = findChildOfType(node, NodeType.VarType);
+        if (typeNode != null) {
+            node.analysisType.setTypeStr(typeNode.value);
+        }
+
+        node.analysisType.applyHintedUsageIfUnknown();
+
+        if (node.analysisType.isUnknown()) {
+            emitError(node, ErrorType.GenericError, 'could not infer type of variable definition');
+            return;
+        }
+
+        if (!valueNode.analysisType.equals(node.analysisType)) {
+            var castPath = findCastPath(scope, valueNode.analysisType, node.analysisType);
+            if (castPath.length > 0) {
+                castNodeTo(valueNode.children[0], scope, node.analysisType);
+                return;
+            }
+
+            emitError(node, ErrorType.TypeMismatch, 'expected ${node.analysisType} but got ${valueNode.analysisType}');
+        }
+    }
+
+    public function verifyLoopControl(node: Node, scope: AnalyserScope, error: ErrorType): Void {
+        var parent = findParentOfType(node, NodeType.ForLoop) ??  findParentOfType(node, NodeType.WhileLoop);
+        if (parent == null) {
+            emitError(node, error, '${node.value} outside of loop');
         }
     }
 
@@ -534,16 +692,16 @@ class Analyser {
 
     public function getNodeScope(node: Node, scope: AnalyserScope): AnalyserScope {
         switch (node.type) {
-            case NodeType.FunctionDeclBody:
+            case NodeType.FunctionDecl:
                 var s = new AnalyserScope(this);
                 s.copyFromScope(scope, true);
                 s.setCurrentFunctionNode(node);
                 return s;
-            case NodeType.IfStatementBody:
+            case NodeType.IfStatement:
                 var s = new AnalyserScope(this);
                 s.copyFromScope(scope, true);
                 return s;
-            case NodeType.WhileLoopBody:
+            case NodeType.WhileLoop:
                 var s = new AnalyserScope(this);
                 s.copyFromScope(scope, true);
                 return s;
@@ -566,14 +724,16 @@ class Analyser {
     }
 
     public function runAtNode(node: Node, scope: AnalyserScope): Void {
-        inferType(node, scope);
-
         var subScope: AnalyserScope = getNodeScope(node, scope);
+
+        inferType(node, subScope);
         for (child in node.children) {
             runAtNode(child, subScope);
         }
 
-        verifyNode(node, scope);
+        for (child in node.children) {
+            verifyNode(child, subScope);
+        }
     }
 
     public function getErrors(): ErrorContainer {

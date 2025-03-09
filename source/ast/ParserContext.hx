@@ -694,6 +694,8 @@ class ParserContext {
                 doExactConversion(token, NodeType.LoopBreak);
             case "true" | "false":
                 doExactConversion(token, NodeType.BooleanLiteral);
+            case "null":
+                doExactConversion(token, NodeType.NullLiteral);
             default:
                 if (hasNext()) {
                     var _peekNext = peekNext();

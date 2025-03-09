@@ -21,6 +21,7 @@ enum NodeType {
     FloatLiteral;
     IntLiteral;
     BooleanLiteral;
+    NullLiteral;
     Identifier;
     ForLoop;
     ForLoopInit;

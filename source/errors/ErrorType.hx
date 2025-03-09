@@ -20,4 +20,8 @@ enum ErrorType {
     TernaryMismatch;
     MissingCondition;
     MissingBody;
+    ContineOutsideLoop;
+    BreakOutsideLoop;
+    UninitializedVariable;
+    NotNullable;
 }

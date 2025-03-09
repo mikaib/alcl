@@ -72,7 +72,7 @@ class AnalyserType {
     }
 
     public function setType(type: AnalyserType): Void {
-        setTypeStr(type._type);
+        if (!type.isUnknown()) setTypeStr(type._type);
     }
 
     public function setIfUnknown(type: AnalyserType): Void {
@@ -109,20 +109,36 @@ class AnalyserType {
     }
 
     public function isUnknown(): Bool {
-        return _type == null;
+        return _type == null || _type == "Null";
     }
 
     @:op(A == B)
     public function equals(other: AnalyserType): Bool {
-        return _type == other._type;
+        return _type == other._type || this.isNull() || other.isNull();
     }
 
     public function isComparableWith(other: AnalyserType): Bool {
-        return this.equals(other) || (this.isNumericalType() && other.isNumericalType());
+        return this.equals(other) || (this.isNumericalType() && other.isNumericalType()) || (this.isNull() && other.isNull());
     }
 
     public function isNumericalType(): Bool {
         return _type == "Int32" || _type == "Int64" || _type == "Float32" || _type == "Float64";
+    }
+
+    public function isFloatingPointType(): Bool {
+        return _type == "Float32" || _type == "Float64";
+    }
+
+    public function isIntegerType(): Bool {
+        return _type == "Int32" || _type == "Int64";
+    }
+
+    public function isBooleanType(): Bool {
+        return _type == "Bool";
+    }
+
+    public function isNull(): Bool {
+        return _type == "Null";
     }
 
     public function toDebugString(): String {

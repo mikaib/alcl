@@ -28,6 +28,7 @@ class Node {
             endLine: endLine,
             endColumn: endColumn,
             analysisType: linkedType ? analysisType : analysisType.toMutableType(),
+            analysisScope: analysisScope
         }
         for (child in children) {
             node.children.push(child.deepCopy(addParent));
