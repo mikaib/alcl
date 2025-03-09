@@ -117,7 +117,7 @@ class Printer {
             case NodeType.StringLiteral:
                 out += '"${node.value}"';
             case NodeType.NullLiteral:
-                out += "NULL";
+                out += "0";
             case NodeType.OperationLeft:
                 out += printChildren(node, true);
             case NodeType.OperationRight:
@@ -311,7 +311,7 @@ class Printer {
         var value = findChildOfType(node, NodeType.VarValue);
         if (value == null) {
             value = {
-                type: NodeType.Identifier,
+                type: NodeType.NullLiteral,
                 value: "NULL"
             }
         }
