@@ -117,7 +117,7 @@ class Printer {
             case NodeType.StringLiteral:
                 out += '"${node.value}"';
             case NodeType.NullLiteral:
-                out += "0";
+                out += "((void *)0)";
             case NodeType.OperationLeft:
                 out += printChildren(node, true);
             case NodeType.OperationRight:
