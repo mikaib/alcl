@@ -365,18 +365,17 @@ class ParserContext {
         }
 
         if (hasNextOfType(TokenType.Assign)) {
-            var assignToken: Token = peekNext();
+            var rightTokens = getTokenArrayDelim(TokenType.Null, TokenType.Semicolon, 1);
             var assignNode = createNode(
                 NodeType.VarValue,
                 token,
-                assignToken,
+                rightTokens[rightTokens.length - 1],
                 varNode
             );
 
             varNode.children.push(assignNode);
 
-            var assignTokens: Array<Token> = getTokenArrayDelim(TokenType.Null, TokenType.Semicolon, 1);
-            var assignCtx: ParserContext = new ParserContext(assignTokens, _parser, assignNode);
+            var assignCtx: ParserContext = new ParserContext(rightTokens, _parser, assignNode);
             assignCtx.parse();
         }
 
@@ -385,24 +384,25 @@ class ParserContext {
 
     public function parseVarAssign(token: Token): Void {
         var varName: Token = token;
-        var varNode = createNode(NodeType.VarAssign, token, null, null, varName.value);
-
-        if (hasNextOfType(TokenType.Colon)) {
-            next(2); // We skip any type info
+        if (hasPrevOfType(TokenType.Colon)) { // NOTE: parser supports this but the language doesn't
+            popLastNode();
+            varName = peekPrev(1);
         }
 
+        var varNode = createNode(NodeType.VarAssign, token, null, null, varName.value);
+
         if (hasNextOfType(TokenType.Assign)) {
-            var assignToken: Token = peekNext();
+            var rightTokens = getTokenArrayDelim(TokenType.Null, TokenType.Semicolon, 1);
             var assignNode = createNode(
                 NodeType.VarValue,
                 token,
-                assignToken,
+                rightTokens[rightTokens.length - 1],
                 varNode
             );
 
             varNode.children.push(assignNode);
 
-            var assignCtx: ParserContext = new ParserContext(getTokenArrayDelim(TokenType.Assign, TokenType.Semicolon), _parser, assignNode);
+            var assignCtx: ParserContext = new ParserContext(rightTokens, _parser, assignNode);
             assignCtx.parse();
         }
 
