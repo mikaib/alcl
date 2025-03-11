@@ -788,7 +788,7 @@ class ParserContext {
                 _parser.getTypes().addAlclToCTypeMapping(alclType, cType);
             case "no_global_lib":
                 @:privateAccess _parser._wantGlobalLib = false;
-            case "c":
+            case "inject_c":
                 var first = tokenizer.tokens.shift();
                 var last = tokenizer.tokens.pop();
                 var firstIdx = first.index;

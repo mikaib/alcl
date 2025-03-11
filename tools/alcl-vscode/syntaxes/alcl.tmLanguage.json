@@ -35,7 +35,7 @@
       "patterns": [
         {
           "name": "storage.modifier.metadata.alcl",
-          "match": "#(?:native_header|native_function|ctype|c)"
+          "match": "#(?:native_header|native_function|ctype|inject_c|assert_type|log_type)"
         },
         {
           "name": "keyword.import.alcl",
@@ -55,7 +55,7 @@
       "patterns": [
         {
           "name": "support.class.builtin.alcl support.package.alcl entity.name.type.alcl",
-          "match": "\\b(Void|CString|String|Byte|Bool|Float32|Float64|UInt32|UInt64|Int32|Int64)\\b"
+          "match": "\\b(Void|CString|String|Byte|Bool|Float32|Float64|UInt32|UInt64|Int32|Int64|Null)\\b"
         },
         {
           "name": "constant.language.alcl",

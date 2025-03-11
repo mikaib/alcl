@@ -1,0 +1,9 @@
+func var_to_var_assignment() {
+    var x;
+    var y;
+    var z = x = y = 1.0;
+
+    #assert_type x Float64
+    #assert_type y Float64
+    #assert_type z Float64
+}
