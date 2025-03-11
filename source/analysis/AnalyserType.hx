@@ -7,6 +7,7 @@ class AnalyserType {
     private var _currentHintPriority: Int = 0xFFFF;
     private var _hintedUsageType: Array<AnalyserType>;
     private var _onChangeCallbacks: Array<Void->Void>;
+    private var _onHintApplyCallbacks: Array<Void->Void>;
 
     private var _id: Int;
     private static var _count: Int = 0;
@@ -37,6 +38,7 @@ class AnalyserType {
     private function new() {
         _type = null;
         _onChangeCallbacks = [];
+        _onHintApplyCallbacks = [];
         _hintedUsageType = [];
         _id = _count++;
     }
@@ -47,6 +49,10 @@ class AnalyserType {
         if (runImmediately) {
             cb();
         }
+    }
+
+    public function onHintApplication(cb: Void->Void): Void {
+        _onHintApplyCallbacks.push(cb);
     }
 
     public function toFixed(): AnalyserFixedType {
@@ -88,7 +94,11 @@ class AnalyserType {
     }
 
     public function applyHintedUsageIfUnknown(): Void {
-        if (_type == null && _hintedUsageType.length > 0) {
+        if (isUnknown() && _hintedUsageType.length > 0) {
+            for (hintCb in _onHintApplyCallbacks) {
+                hintCb();
+            }
+
             for (t in _hintedUsageType) {
                 var idx = _hintedUsageType.indexOf(t);
                 if (!t.isUnknown()) {

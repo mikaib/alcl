@@ -8,8 +8,8 @@ func mul(a, b, c) {
 
 func main(u) {
     var x = null;
-    var i = mul(1, 2, 3);
-    var o = mul(1, i, 3);
+    var i = mul(1, 2, 3)
+    var o = mul(1, i, 3)
     var y = add(i, 2, o) - u;
     x = y;
     x = null;

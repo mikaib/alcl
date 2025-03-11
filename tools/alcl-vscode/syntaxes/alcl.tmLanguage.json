@@ -35,7 +35,7 @@
       "patterns": [
         {
           "name": "storage.modifier.metadata.alcl",
-          "match": "#(?:native_header|native_function)"
+          "match": "#(?:native_header|native_function|ctype|c)"
         },
         {
           "name": "keyword.import.alcl",
@@ -47,7 +47,7 @@
       "patterns": [
         {
           "name": "keyword.control.alcl",
-          "match": "\\b(var|while|return|break|continue|if|else|in|of)\\b"
+          "match": "\\b(var|while|return|break|continue|if|else|in|of|as)\\b"
         }
       ]
     },

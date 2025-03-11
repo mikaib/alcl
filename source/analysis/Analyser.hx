@@ -101,7 +101,7 @@ class Analyser {
             case NodeType.StringLiteral:
                 node.analysisType = AnalyserType.fromFixed(TCString);
             case NodeType.FloatLiteral:
-                node.analysisType = AnalyserType.fromFixed(TFloat32);
+                node.analysisType = AnalyserType.fromFixed(TFloat64);
             case NodeType.IntLiteral:
                 node.analysisType = AnalyserType.fromFixed(TInt32);
             case NodeType.BooleanLiteral:
@@ -140,14 +140,22 @@ class Analyser {
         var valueNode: Node = findChildOfType(node, NodeType.VarValue);
         var initialized: Bool = false;
 
-        if (valueNode != null) {
-            inferType(valueNode, scope);
-            node.analysisType.hintUsage(valueNode.analysisType);
-            initialized = true;
-        }
-
         if (typeNode != null) {
             node.analysisType.setTypeStr(typeNode.value);
+        }
+
+        if (valueNode != null) {
+            if (node.analysisType.isUnknown()) {
+                inferType(valueNode, scope);
+
+                valueNode.analysisType.onTypeChange(() -> { // sneaky hack to handle cases to handle types that change in the future.
+                    if (!valueNode.analysisType.isUnknown()) {
+                        node.analysisType.setType(valueNode.analysisType);
+                    }
+                }, true);
+            }
+
+            initialized = true;
         }
 
         scope.defineVariable(node.value, node.analysisType, node, initialized);
@@ -424,12 +432,16 @@ class Analyser {
         valueNode.analysisType = valueNode.children[0].analysisType;
         inferType(valueNode, scope);
 
+        valueNode.analysisType.applyHintedUsageIfUnknown();
+
         var typeNode: Node = findChildOfType(node, NodeType.VarType);
         if (typeNode != null) {
             node.analysisType.setTypeStr(typeNode.value);
         }
 
-        node.analysisType.applyHintedUsageIfUnknown();
+        if (!valueNode.children[0].analysisType.isUnknown() && node.analysisType.isUnknown()) {
+            node.analysisType.setType(valueNode.children[0].analysisType);
+        }
 
         if (node.analysisType.isUnknown()) {
             emitError(node, ErrorType.GenericError, 'could not infer type of variable definition');
@@ -828,6 +840,7 @@ class Analyser {
         scope.addCastMethod(AnalyserCastMethod.usingCast(TInt32, TFloat64, true));
         scope.addCastMethod(AnalyserCastMethod.usingCast(TInt64, TFloat64, true));
         scope.addCastMethod(AnalyserCastMethod.usingCast(TFloat32, TFloat64, true));
+        scope.addCastMethod(AnalyserCastMethod.usingCast(TFloat64, TFloat32, true)); // TODO: review if this should be allowed and/or add a warning to compiler for precision loss unless explicitly casted.
 
         runAtNode(_parser.getRoot(), scope);
     }
