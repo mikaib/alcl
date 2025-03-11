@@ -1,6 +1,9 @@
 func main() {
-    var x;
-    var y;
-    var z = x = y = null;
+    var x
+    var y
+    var w
+    var z = x = y = w = null
     x = 1.0
+    y = true
+    w = "Hello, World!"
 }

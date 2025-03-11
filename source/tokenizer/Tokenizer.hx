@@ -52,12 +52,24 @@ class Tokenizer {
                 case '\r':
                     column++;
                     i++;
+                    if (tokens.length > 0) {
+                        var lastToken = tokens[tokens.length - 1];
+                        if (lastToken.type != TokenType.Semicolon) {
+                            tokens.push({ type: TokenType.Semicolon, value: ';', line: line, column: column, index: i });
+                        }
+                    }
                     continue;
 
                 case '\n':
                     line++;
                     column = 1;
                     i++;
+                    if (tokens.length > 0) {
+                        var lastToken = tokens[tokens.length - 1];
+                        if (lastToken.type != TokenType.Semicolon) {
+                            tokens.push({ type: TokenType.Semicolon, value: ';', line: line, column: column, index: i });
+                        }
+                    }
                     continue;
 
                 case '>':
