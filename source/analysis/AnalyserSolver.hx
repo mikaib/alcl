@@ -28,7 +28,7 @@ class AnalyserSolver {
             });
 
             for (constraint in constraints) {
-                trace(constraint.a, constraint.b, constraints.indexOf(constraint), constraints.length);
+                trace(constraint.a.toDebugString(), constraint.b.toDebugString());
 
                 if (constraint.a.isUnknown() && constraint.b.isUnknown()) {
                     continue;
@@ -36,7 +36,7 @@ class AnalyserSolver {
                     constraint.a.setType(constraint.b);
                 } else if (!constraint.a.isUnknown() && constraint.b.isUnknown()) {
                     constraint.b.setType(constraint.a);
-                } else {
+                } else if (!constraint.a.equals(constraint.b)) {
                    _analyser.emitError(constraint.node, ErrorType.TypeMismatch, '${constraint.a} and ${constraint.b} are incompatible!');
                     continue;
                 }

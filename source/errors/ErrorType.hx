@@ -5,23 +5,8 @@ enum ErrorType {
     UnsupportedFileType;
     FileNotFound;
     FileIsDirectory;
-    UnexpectedNode;
-    ReturnOutsideFunction;
+    SyntaxError;
     TypeMismatch;
-    TypeKindMismatch;
-    TypeInferenceError;
     TypeCastError;
-    ReturnTypeMismatch;
-    UndefinedVariable;
-    FunctionNotDefined;
-    FunctionParamCountMismatch;
-    FunctionParamTypeMismatch;
-    UnknownUnaryOp;
-    TernaryMismatch;
-    MissingCondition;
-    MissingBody;
-    ContineOutsideLoop;
-    BreakOutsideLoop;
-    UninitializedVariable;
-    NotNullable;
+    ReturnOutsideFunction;
 }

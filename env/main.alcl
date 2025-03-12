@@ -1,3 +1,7 @@
-func main(a, b) {
-    return a + b;
+// func main(a, b) {
+//     return a + b + 3.0;
+// }
+
+func main() {
+    return 3.0;
 }

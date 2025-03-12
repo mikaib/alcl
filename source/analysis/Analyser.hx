@@ -23,7 +23,6 @@ class Analyser {
     private var TBool: AnalyserFixedType = AnalyserType.createFixedType("Bool");
     private var TCString: AnalyserFixedType = AnalyserType.createFixedType("CString");
     private var TVoid: AnalyserFixedType = AnalyserType.createFixedType("Void");
-    private var TNull: AnalyserFixedType = AnalyserType.createFixedType("Null");
     private var TUnknown: AnalyserFixedType = AnalyserType.createUnknownType().toFixed();
 
     public function new(parser: Parser, ?file: String) {
@@ -131,9 +130,106 @@ class Analyser {
         }
     }
 
+    /*
+    None;
+    Root;
+    CCode;
+    Cast;
+    FunctionDecl;
+    FunctionDeclParam;
+    FunctionDeclParamType;
+    FunctionDeclReturnType;
+    FunctionDeclBody;
+    FunctionDeclNativeBody;
+    FunctionCall;
+    FunctionCallParam;
+    VarDef;
+    VarType;
+    VarAssign;
+    VarValue;
+    Identifier;
+    ForLoop;
+    ForLoopInit;
+    ForLoopCond;
+    ForLoopIter;
+    ForLoopBody;
+    WhileLoop;
+    WhileLoopCond;
+    WhileLoopBody;
+    LoopBreak;
+    LoopContinue;
+    IfStatement;
+    IfStatementElse;
+    IfStatementElseIf;
+    IfStatementCond;
+    IfStatementBody;
+    Ternary;
+    TernaryCond;
+    TernaryTrue;
+    TernaryFalse;
+    UnaryOp;
+    BinaryOp;
+    SubExpression;
+    Return;
+     */
     public function createNodeConstraintsAndVerify(node: Node, scope: AnalyserScope): Void {
         switch (node.type) {
+            case NodeType.StringLiteral:
+                mustHaveExactChildrenAmount(node, 0);
+                addTypeConstraint(node, node.analysisType, TCString, CONSTANT);
 
+            case NodeType.BooleanLiteral:
+                mustHaveExactChildrenAmount(node, 0);
+                addTypeConstraint(node, node.analysisType, TBool, CONSTANT);
+
+            case NodeType.FloatLiteral:
+                mustHaveExactChildrenAmount(node, 0);
+                addTypeConstraint(node, node.analysisType, TFloat64, CONSTANT);
+
+            case NodeType.NullLiteral:
+                mustHaveExactChildrenAmount(node, 0);
+
+            case NodeType.IntLiteral:
+                mustHaveExactChildrenAmount(node, 0);
+                addTypeConstraint(node, node.analysisType, TInt32, CONSTANT);
+
+            case NodeType.OperationLeft | NodeType.OperationRight | NodeType.TernaryTrue | NodeType.TernaryFalse:
+                mustHaveExactChildrenAmount(node, 1);
+                copyTypeFromFirstChild(node);
+
+            case NodeType.Return:
+                mustHaveExactChildrenAmount(node, 1);
+                copyTypeFromFirstChild(node);
+                errorIfNull(node, scope.getCurrentFunctionNode(), ErrorType.ReturnOutsideFunction, 'return statement outside function');
+                addTypeConstraint(node, node.analysisType, scope.getCurrentFunctionNode()?.analysisType, INFERENCE);
+
+            case NodeType.TernaryCond | NodeType.IfStatementCond | NodeType.WhileLoopCond | NodeType.ForLoopCond:
+                mustHaveExactChildrenAmount(node, 1);
+                addTypeConstraint(node, node.analysisType, TBool, INFERENCE);
+
+            default:
+                if (node.children.length == 1) {
+                    addTypeConstraint(node, node.analysisType, node.children[0].analysisType, INFERENCE);
+                }
+        }
+    }
+
+    public function errorIfNull(node: Node, value: Dynamic, type: ErrorType, message: String): Void {
+        if (value == null) emitError(node, type, message);
+    }
+
+    public function mustHaveExactChildrenAmount(node: Node, amount: Int): Bool {
+        if (node.children.length != amount) {
+            emitError(node, ErrorType.SyntaxError, 'unexpected ${node.children[0].type} (${node.children[0].value})');
+            return false;
+        }
+
+        return true;
+    }
+
+    public function copyTypeFromFirstChild(node: Node): Void {
+        if (node.children.length > 0) {
+            node.analysisType = node.children[0].analysisType;
         }
     }
 
@@ -225,6 +321,8 @@ class Analyser {
     }
 
     public function addTypeConstraint(origin: Node, a: AnalyserType, b: AnalyserType, priority: AnalyserConstraintPriority): Void {
+        if (a == null || b == null) return;
+
         _solver.addConstraint({
             a: a,
             b: b,
