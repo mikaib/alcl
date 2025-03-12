@@ -1,9 +1,3 @@
-func main() {
-    var x
-    var y
-    var w
-    var z = x = y = w = null
-    x = 1.0
-    y = true
-    w = "Hello, World!"
+func main(a, b) {
+    return a + b;
 }
