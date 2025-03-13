@@ -81,6 +81,10 @@ class AnalyserScope {
         _currentFunctionNode = node;
     }
 
+    public function getChildren(): Array<AnalyserScope> {
+        return _children;
+    }
+
     public function defineVariable(name: String, type: AnalyserType, node: Node, initialized: Bool = true): Void {
         var variable: AnalyserVariable = {
             name: name,

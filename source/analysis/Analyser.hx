@@ -474,7 +474,23 @@ class Analyser {
         // Pass 1: Create constraints and verify validity of nodes.
         runAtNode(_parser.getRoot(), scope);
 
-        // Pass 2: Solve constraints
+        // Pass 2: Check undefined functions (needed for recursive functions)
+        function checkUndefinedFunctions(scope: AnalyserScope): Void {
+            for (func in scope.getFunctions()) {
+                if (!func.defined) {
+                    for (usage in func.usages) {
+                        emitError(usage, ErrorType.UndefinedFunction, 'undefined function ${usage.value}');
+                    }
+                }
+            }
+
+            for (child in scope.getChildren()) {
+                checkUndefinedFunctions(child);
+            }
+        }
+        checkUndefinedFunctions(scope);
+
+        // Pass 3: Solve constraints
         _solver.solve();
     }
 
