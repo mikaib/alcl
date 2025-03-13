@@ -249,8 +249,9 @@ class Analyser {
                 mustHaveExactChildrenAmount(node, 2);
                 addTypeConstraint(node, left?.analysisType, right?.analysisType, INFERENCE); // Ensure we are comparing the same thing
 
-                if (_compareOps.indexOf(node.value) != -1) addTypeConstraint(node, node.analysisType, TBool, INFERENCE);
-                else {
+                if (_compareOps.indexOf(node.value) != -1) {
+                    addTypeConstraint(node, node.analysisType, TBool, INFERENCE);
+                } else {
                     addNumericalTypeConstraint(node, node.analysisType, INFERENCE);
                     addTypeConstraint(node, node.analysisType, left?.analysisType, INFERENCE);
                 }

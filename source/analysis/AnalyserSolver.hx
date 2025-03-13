@@ -44,8 +44,7 @@ class AnalyserSolver {
         }
 
         for (constraint in constraints) {
-            if (constraint.a.isUnknown() && constraint.b.isUnknown()) analyser.emitError(constraint.node, ErrorType.TypeInferenceError, 'cannot infer type');
-            else constraint.fail(this);
+            constraint.fail(this);
         }
 
         return constraints.length <= 0;

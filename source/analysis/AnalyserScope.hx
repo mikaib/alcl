@@ -81,8 +81,6 @@ class AnalyserScope {
         _currentFunctionNode = node;
     }
 
-    public
-
     public function defineVariable(name: String, type: AnalyserType, node: Node, initialized: Bool = true): Void {
         var variable: AnalyserVariable = {
             name: name,
