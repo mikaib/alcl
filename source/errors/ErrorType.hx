@@ -7,6 +7,11 @@ enum ErrorType {
     FileIsDirectory;
     SyntaxError;
     TypeMismatch;
+    TypeInferenceError;
     TypeCastError;
     ReturnOutsideFunction;
+    UndefinedVariable;
+    UninitializedVariable;
+    UndefinedFunction;
+    ArgumentCountMismatch;
 }

@@ -4,11 +4,11 @@ import errors.ErrorType;
 class AnalyserSolver {
 
     private var _constraints: Array<AnalyserConstraint>;
-    private var _analyser: Analyser;
+    public var analyser: Analyser;
 
     public function new(analyser: Analyser) {
         _constraints = [];
-        _analyser = analyser;
+        this.analyser = analyser;
     }
 
     public function addConstraint(constraint: AnalyserConstraint): Void {
@@ -21,27 +21,18 @@ class AnalyserSolver {
         var toRemove: Array<AnalyserConstraint> = [];
 
         while (changed) {
-            trace('-------');
+            trace('SOLVE:');
             changed = false;
             constraints.sort((a, b) -> {
                 return b.priority - a.priority;
             });
 
             for (constraint in constraints) {
-                trace(constraint.a.toDebugString(), constraint.b.toDebugString());
+                trace('    ' + constraint.toString());
 
-                if (constraint.a.isUnknown() && constraint.b.isUnknown()) {
-                    continue;
-                } else if (constraint.a.isUnknown() && !constraint.b.isUnknown()) {
-                    constraint.a.setType(constraint.b);
-                } else if (!constraint.a.isUnknown() && constraint.b.isUnknown()) {
-                    constraint.b.setType(constraint.a);
-                } else if (!constraint.a.equals(constraint.b)) {
-                   _analyser.emitError(constraint.node, ErrorType.TypeMismatch, '${constraint.a} and ${constraint.b} are incompatible!');
-                    continue;
+                if (constraint.solve(this)) {
+                    toRemove.push(constraint);
                 }
-
-                toRemove.push(constraint);
             }
 
             for (constraint in toRemove) {
@@ -50,6 +41,11 @@ class AnalyserSolver {
             }
 
             toRemove.resize(0);
+        }
+
+        for (constraint in constraints) {
+            if (constraint.a.isUnknown() && constraint.b.isUnknown()) analyser.emitError(constraint.node, ErrorType.TypeInferenceError, 'cannot infer type');
+            else constraint.fail(this);
         }
 
         return constraints.length <= 0;

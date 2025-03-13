@@ -52,11 +52,8 @@ class Tokenizer {
                 case '\r':
                     column++;
                     i++;
-                    if (tokens.length > 0) {
-                        var lastToken = tokens[tokens.length - 1];
-                        if (lastToken.type != TokenType.Semicolon) {
-                            tokens.push({ type: TokenType.Semicolon, value: ';', line: line, column: column, index: i });
-                        }
+                    if (i < code.length && code.charAt(i) != '\n') {
+                        code = code.substring(0, i) + '\n' + code.substring(i);
                     }
                     continue;
 
@@ -176,16 +173,12 @@ class Tokenizer {
                         while (j < code.length) {
                             var c2 = code.charAt(j);
                             if (c2 == '\n' || c2 == '\r') {
-                                while (j < code.length && (code.charAt(j) == '\n' || code.charAt(j) == '\r')) {
-                                    j++;
-                                }
                                 break;
                             }
+
                             j++;
                         }
 
-                        line += 1;
-                        column = 1;
                         i = j;
                         continue;
                     }

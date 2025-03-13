@@ -16,6 +16,7 @@
 - basic standard lib
 
 done:
+- check branches (if, else if, else) for return statements, and check that all branches return
 - add analyser (verify ast, infer types, implicit casts, operator overloading, check return branches, etc)
 - infer function param types from usages
 - fix for loops to be it's own thing instead of syntactic sugar for while loops

@@ -11,6 +11,7 @@ class AnalyserScope {
     private var _castMethods: Array<AnalyserCastMethod>;
     private var _varLookup: Map<String, AnalyserVariable>;
     private var _funcLookup: Map<String, AnalyserFunction>;
+    private var _children: Array<AnalyserScope>;
     private var _id: Int;
     private var _currentFunctionNode: Node;
 
@@ -21,11 +22,31 @@ class AnalyserScope {
         _variables = [];
         _functions = [];
         _castMethods = [];
+        _children = [];
         _id = _count++;
     }
 
     public function isInFunction(): Bool {
         return _currentFunctionNode != null;
+    }
+
+    public function markFunctionUsage(node: Node, name: String): Void {
+        var func: Null<AnalyserFunction> = getFunction(name);
+        if (func == null) {
+            func = {
+                name: name,
+                type: AnalyserType.createUnknownType(),
+                params: [],
+                origin: null,
+                usages: [],
+                defined: false
+            };
+
+            _functions.push(func);
+            _funcLookup.set(name, func);
+        }
+
+        func.usages.push(node);
     }
 
     public function getCurrentFunctionNode(): Null<Node> {
@@ -60,6 +81,8 @@ class AnalyserScope {
         _currentFunctionNode = node;
     }
 
+    public
+
     public function defineVariable(name: String, type: AnalyserType, node: Node, initialized: Bool = true): Void {
         var variable: AnalyserVariable = {
             name: name,
@@ -70,18 +93,48 @@ class AnalyserScope {
 
         _variables.push(variable);
         _varLookup.set(name, variable);
+
+        for (child in _children) {
+            child.defineVariable(name, type, node, initialized);
+        }
     }
 
     public function defineFunction(name: String, type: AnalyserType, params: Array<AnalyserFunctionParam>, origin: Node): Void {
+        if (_funcLookup.exists(name)) {
+            var fn = _funcLookup.get(name);
+            if (!fn.defined) {
+                fn.params = params;
+                fn.origin = origin;
+                fn.defined = true;
+                _analyser.addTypeConstraint(origin, type, fn.type, AnalyserConstraintPriority.INFERENCE);
+
+                for (usage in fn.usages) {
+                    _analyser.createNodeConstraintsAndVerify(usage, usage.analysisScope);
+                }
+
+                for (child in _children) {
+                    child.defineFunction(name, type, params, origin);
+                }
+
+                fn.usages = [];
+            }
+        }
+
         var func: AnalyserFunction = {
             name: name,
             type: type,
             params: params,
-            origin: origin
+            origin: origin,
+            usages: [],
+            defined: true
         };
 
         _functions.push(func);
         _funcLookup.set(name, func);
+
+        for (child in _children) {
+            child.defineFunction(name, type, params, origin);
+        }
     }
 
     public function copyFromScope(scope: AnalyserScope, shallowCopy: Bool = true): Void {
@@ -91,6 +144,7 @@ class AnalyserScope {
         _funcLookup = shallowCopy ? scope._funcLookup.copy() : scope._funcLookup;
         _castMethods = shallowCopy ? scope._castMethods.copy() : scope._castMethods;
         _currentFunctionNode = scope._currentFunctionNode;
+        scope._children.push(this);
     }
 
     public function toDebugString(): String {

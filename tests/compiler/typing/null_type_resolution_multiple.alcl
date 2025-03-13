@@ -4,13 +4,12 @@ func null_type_resolution() {
     x = null;
     y = x;
     x = 3.1;
-    #assert_type y Null
     y = x;
-    #assert_type y Float64
     x = null;
     x = 5;
+    y = x;
     x = null;
 
-    #assert_type
+    #assert_type y Float64
     #assert_type x Float64
 }

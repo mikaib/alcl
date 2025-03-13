@@ -40,6 +40,17 @@ func mixed(): Void {
     alcl_test_float("Mixed 3", 5 + 2 - 3 * 4, -5);
 }
 
+func int_and_float(): Void {
+    alcl_test_float("Int and Float 1", 5 + 3.0, 8);
+    alcl_test_float("Int and Float 2", 5.0 + 3, 8);
+    alcl_test_float("Int and Float 3", 5 - 3.0, 2);
+    alcl_test_float("Int and Float 4", 5.0 - 3, 2);
+    alcl_test_float("Int and Float 5", 5 * 3.0, 15);
+    alcl_test_float("Int and Float 6", 5.0 * 3, 15);
+    alcl_test_float("Int and Float 7", 5 / 3.0, 1.6666666666666667);
+    alcl_test_float("Int and Float 8", 5.0 / 3, 1.6666666666666667);
+}
+
 func order_of_operations(): Void {
     alcl_test_float("Order of Operations 1", 5 + 3 * 2, 11);
     alcl_test_float("Order of Operations 2", 5 * 3 + 2, 17);
@@ -86,5 +97,6 @@ func test_math(): Void {
     modulus();
     mixed_division_modulus();
     binop_vs_unaryop();
+    int_and_float();
     other();
 }
