@@ -35,6 +35,8 @@ class Main {
         cli.addOption("cwd", "Basics", "Set the current working directory", value -> project.setWorkingDirectory(value));
         cli.addOption("verbose", "Basics", "Enable verbose logging", value -> project.setVerbose(true));
         cli.addOption("compile", "Basics", "Compile the project with the specified build tool", value -> compileUsing = value);
+        cli.addOption("define", "Basics", "Add a define to the project", value -> project.addDefine(value));
+        cli.addOption("D", "Basics", "Add a define to the project (alias)", value -> project.addDefine(value));
         cli.addOption("std", "Advanced", "Set the directory of the standard library", value -> project.setStdLibDirectory(value));
         cli.addOption("ast", "Advanced", "Output the AST of the entire project", value -> project.setDumpAst(true));
         cli.parse();
@@ -57,14 +59,16 @@ class Main {
             }
         }
 
-
         var stdLib = new ProjectData();
         stdLib.setProjectName("StandardLibrary");
         stdLib.setRootDirectory(project.getStdLibDirectory());
 
         project.setProjectName("UserProject");
-        project.addDependency(stdLib);
         project.applyWorkingDirectory();
+
+        if (!project.hasDefine("NO_STDLIB")) {
+            project.addDependency(stdLib);
+        }
 
         var stdFiles: Array<String> = [];
         if (!FileSystem.exists(project.getStdLibDirectory())) {

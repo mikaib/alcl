@@ -26,6 +26,7 @@ class ProjectData {
     private var _builtFileMap: Map<String, Bool> = [];
     private var _parserMap: Map<String, Parser> = [];
     private var _analyserMap: Map<String, Analyser> = [];
+    private var _defines: Map<String, String> = [];
 
     /**
      * Set the dump AST flag for the project
@@ -271,6 +272,44 @@ class ProjectData {
     }
 
     /**
+     * Add a define
+     * @param name The name of the define
+     */
+    public function addDefine(name: String): Void {
+        _defines[name.toLowerCase()] = '';
+    }
+
+    /**
+     * Set a define
+     * @param name The name of the define
+     * @param value The value of the define
+     */
+    public function setDefine(name: String, value: String): Void {
+        _defines[name.toLowerCase()] = value;
+    }
+
+    /**
+     * Get the defines
+     */
+    public function getDefines(): Map<String, String> {
+        return _defines.copy();
+    }
+
+    /**
+     * Check if define is set
+     */
+    public function hasDefine(name: String): Bool {
+        return _defines.exists(name.toLowerCase());
+    }
+
+    /**
+     * Set the defines
+     */
+    public function setDefines(defines: Map<String, String>): Void {
+        _defines = defines;
+    }
+
+    /**
      * Run a build on the project
      */
     public function build(isDependency: Bool = false): Bool {
@@ -286,6 +325,7 @@ class ProjectData {
             dependency.setBuiltFileMap(_builtFileMap);
             dependency.setVerbose(_verbose);
             dependency.setAnalyserMap(_analyserMap);
+            dependency.setDefines(_defines);
             dependency.build(true);
         }
 
