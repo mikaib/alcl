@@ -110,6 +110,11 @@
                 color: #fff;
             }
 
+            .bg-native {
+                background-color: #692773;
+                color: #fff;
+            }
+
             pre {
                 padding: 10px;
                 background-color: #020303;
@@ -133,7 +138,7 @@
                     <% keys.forEach(folder => { %>
                         <% if (typeof modules[folder] === 'object') { %>
                             <li class="nav-item mt-3 nav-dir">
-                                <a class="nav-link" data-bs-toggle="collapse" href="#<%= parent + folder %>" role="button" aria-expanded="false" aria-controls="<%= parent + folder %>">
+                                <a class="nav-link" data-bs-toggle="collapse" href="#<%= parent + folder %>" role="button" aria-expanded="false" aria-controls="<%= parent + folder %>" onclick="modState(this)">
                                     <i class="fa-solid fa-folder"></i> <span class="d-inline-block w-100"><%= folder %></span>
                                 </a>
                                 <div class="collapse" id="<%= parent + folder %>">
@@ -192,6 +197,11 @@
                             let funcStr = '';
                             // TODO: currently ALCL only supports public functions, add support for other visibilities later.
                             funcStr += '<span class="badge bg-public">public</span> ';
+
+                            if (func.isNative) {
+                                funcStr += '<span class="badge bg-native">native</span> ';
+                            }
+
                             funcStr += '<span class="func-name">' + func.name + '</span>(';
                             func.parameters.forEach((param, i) => {
                                 funcStr += '<span class="func-param-name">' + param.name + '</span>';
@@ -228,6 +238,24 @@
             } else if (hours >= 22 || hours < 5) {
                 message = 'Good Night';
             }
+
+            function modState(e) {
+                let key = e.getAttribute('href').substring(1);
+                let state = localStorage.getItem(key);
+                if (state === 'true') {
+                    localStorage.setItem(key, 'false');
+                } else {
+                    localStorage.setItem(key, 'true');
+                }
+            }
+
+            document.querySelectorAll('.nav-link').forEach(e => {
+                let key = e.getAttribute('href').substring(1);
+                let state = localStorage.getItem(key);
+                if (state === 'true') {
+                    e.nextElementSibling.classList.add('show');
+                }
+            });
 
             welcome.innerText = message;
         </script>

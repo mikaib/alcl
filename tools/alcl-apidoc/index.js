@@ -28,6 +28,7 @@ class Docfunction {
         this.name = name;
         this.description = description;
         this.parameters = [];
+        this.isNative = false;
         this.returns = null;
     }
 
@@ -79,6 +80,10 @@ function parseAst(ast) {
                     if (functionChild.type == 5) { // PARAMETER
                         const parameter = new DocParameter(functionChild.value, functionChild.analysisType._type, "");
                         func.addParameter(parameter);
+                    }
+
+                    if (functionChild.type == 9) { // NATIVE FUNCTION
+                        func.isNative = true;
                     }
                 }
 
