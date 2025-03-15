@@ -508,7 +508,6 @@ class Analyser {
     }
 
     public function run(libraries: Array<Analyser>): Void {
-        clearMainScope();
         var scope: AnalyserScope = getMainScope();
 
         // Pass 1: Merge library scopes into main scope
