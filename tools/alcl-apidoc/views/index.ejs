@@ -115,6 +115,16 @@
                 color: #fff;
             }
 
+            .search-bar {
+                background-color: #161b22;
+                color: #c9d1d9;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 6px;
+                padding: 8px 12px;
+                margin-bottom: 10px;
+                width: 100%;
+            }
+
             pre {
                 padding: 10px;
                 background-color: #020303;
@@ -125,6 +135,7 @@
     <body>
         <nav class="sidebar">
             <ul class="nav flex-column">
+                <input type="text" class="search-bar" placeholder="Search modules and functions..." oninput="filterItems()">
                 <% function renderModules(modules, parent = "") { %>
                     <%
                         let keys = Object.keys(modules);
@@ -171,6 +182,7 @@
                 %>
 
                 <%= renderModules(moduleTree) %>
+                <div id="function-results"></div>
             </ul>
         </nav>
 
@@ -186,40 +198,50 @@
                 <%
                     var module = modules.find(m => m.name === query.m);
                 %>
-                <h1><%= module.name %></h1>
-                <p><%= module.description %></p>
 
-                <hr />
-                <h4>Functions</h4>
-                <div>
-                    <% module.functions.forEach(func => { %>
-                        <%
-                            let funcStr = '';
-                            // TODO: currently ALCL only supports public functions, add support for other visibilities later.
-                            funcStr += '<span class="badge bg-public">public</span> ';
-
-                            if (func.isNative) {
-                                funcStr += '<span class="badge bg-native">native</span> ';
-                            }
-
-                            funcStr += '<span class="func-name">' + func.name + '</span>(';
-                            func.parameters.forEach((param, i) => {
-                                funcStr += '<span class="func-param-name">' + param.name + '</span>';
-                                funcStr += ': <span class="func-param-type">' + param.type + '</span>';
-                                if (i < func.parameters.length - 1) funcStr += ', ';
-                            });
-                            funcStr += ')';
-
-                            if (func.returns) {
-                                funcStr += ': <span class="func-return-type">' + func.returns + '</span>';
-                            }
-                        %>
-                        <div class="mb-3 card p-3">
-                            <pre class="mb-1"><code><%- funcStr %></code></pre>
-                            <span><%= func.description == "" ? "No description." : func.description %></span>
+               <% if (!module) { %>
+                    <div class="d-flex justify-content-center align-items-center" style="height: 100%;">
+                        <div class="text-center">
+                            <h2 class="display-4">Module not found</h2>
+                            <p class="lead">The module you are looking for does not exist.</p>
                         </div>
-                    <% }) %>
-                </div>
+                    </div>
+               <% } else {%>
+                    <h1><%= module.name %></h1>
+                    <p><%= module.description %></p>
+
+                    <hr />
+                    <h4>Functions</h4>
+                    <div>
+                        <% module.functions.forEach(func => { %>
+                            <%
+                                let funcStr = '';
+                                // TODO: currently ALCL only supports public functions, add support for other visibilities later.
+                                funcStr += '<span class="badge bg-public">public</span> ';
+
+                                if (func.isNative) {
+                                    funcStr += '<span class="badge bg-native">native</span> ';
+                                }
+
+                                funcStr += '<span class="func-name">' + func.name + '</span>(';
+                                func.parameters.forEach((param, i) => {
+                                    funcStr += '<span class="func-param-name">' + param.name + '</span>';
+                                    funcStr += ': <span class="func-param-type">' + param.type + '</span>';
+                                    if (i < func.parameters.length - 1) funcStr += ', ';
+                                });
+                                funcStr += ')';
+
+                                if (func.returns) {
+                                    funcStr += ': <span class="func-return-type">' + func.returns + '</span>';
+                                }
+                            %>
+                            <div class="mb-3 card p-3">
+                                <pre class="mb-1"><code><%- funcStr %></code></pre>
+                                <span><%= func.description == "" ? "No description." : func.description %></span>
+                            </div>
+                        <% }) %>
+                    </div>
+                    <% } %>
 
             <% } %>
         </main>
@@ -256,6 +278,57 @@
                     e.nextElementSibling.classList.add('show');
                 }
             });
+
+            const modules = JSON.parse(`<%- JSON.stringify(modules) %>`);
+
+            function filterItems() {
+                let functions = [];
+                const funcResults = document.getElementById('function-results');
+                let query = document.querySelector('.search-bar').value.toLowerCase();
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    if (item.classList.contains('nav-dir')) return;
+
+                    let text = item.textContent.toLowerCase();
+                    var shouldShow = false;
+
+                    if (text.includes(query)) {
+                        shouldShow = true;
+                    }
+
+                    var fullModuleName = item.querySelector('.nav-link').getAttribute('href').substring(3);
+                    console.log(fullModuleName);
+                    var module = modules.find(m => m.name === fullModuleName);
+
+                    if (module) {
+                        module.functions.forEach(func => {
+                            if (func.name.toLowerCase().includes(query)) {
+                                functions.push({ module: module.name, name: func.name });
+                            }
+                        });
+                    }
+
+                    item.style.display = shouldShow ? 'block' : 'none';
+                });
+
+                document.querySelectorAll('.nav-dir').forEach(dir => {
+                    let children = dir.querySelectorAll('.nav-item');
+                    let visibleChildren = Array.from(children).filter(child => child.style.display !== 'none');
+                    dir.style.display = visibleChildren.length > 0 ? 'block' : 'none';
+                });
+
+                funcResults.innerHTML = '';
+                if (query === '') return;
+
+                funcResults.innerHTML = '<hr /><h4>Functions</h4>';
+
+                functions.forEach(func => {
+                    let funcLink = document.createElement('a');
+                    funcLink.href = `?m=${func.module}`;
+                    funcLink.classList.add('nav-link');
+                    funcLink.innerHTML = `<i class="fa-solid fa-code"></i> <span class="d-inline-block w-100">${func.name}</span>`;
+                    funcResults.appendChild(funcLink);
+                });
+            }
 
             welcome.innerText = message;
         </script>
