@@ -1,19 +1,13 @@
 // used for test summary
 need "alcl/compiler_testing"
 
-// Runtime tests
-need "test_math"
-need "test_while"
-need "test_comparisons"
-need "test_for"
-need "test_ternary"
-
-// Typing tests
-need "typing_func_recursive_multi_call"
-need "typing_func_recursive_self_call"
-need "typing_null_type_resolution"
-need "typing_null_type_resolution_multiple"
-need "typing_var_to_var_assignment"
+// tests
+need "tests/test_math"
+need "tests/test_while"
+need "tests/test_comparisons"
+need "tests/test_for"
+need "tests/test_ternary"
+need "tests/test_typing"
 
 // run tests
 func main(): Int32 {

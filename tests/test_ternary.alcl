@@ -8,6 +8,7 @@ func test_ternary(): Void {
     // Ternary Leap year
     var year: Int32 = 1900;
     var isLeap: Bool = year % 4 == 0 ? (year % 100 != 0 || year % 400 == 0 ? true : false) : false;
+    alcl_test_bool("Ternary Leap Year", isLeap, true);
 
     // Ternary Min/Max
     var a: Int32 = 10;

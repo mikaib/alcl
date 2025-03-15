@@ -1,5 +1,6 @@
 ### todo:
 - conditional compilation
+- function visibility
 - check branches (if, else if, else) for return statements, and check that all branches return
 - allow analyser to morph varassign/vardecl based on the AnalyserScope
 - make for loops declare variables in the "init" part, so that "i = 0" will always work even if not declared.

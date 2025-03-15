@@ -22,7 +22,7 @@ func large(): Void {
     alcl_test_float("Large Division", 1000000000 / 5000, 200000);
 }
 
-func division_by_zero(): Void {
+func division_by_zero(abc): Void {
 //     assert_eq(10 / 0, 0);
 //     assert_eq(0 / 0, 0);
 }

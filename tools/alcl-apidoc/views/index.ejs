@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>ALCL-apidoc</title>
+        <link href="/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <style>
+            html {
+                font-family: Inter;
+                font-optical-sizing: auto;
+                font-weight: 12;
+                font-style: normal;
+            }
+
+            body {
+                background-color: #0d1117;
+                color: #c9d1d9;
+            }
+
+            .sidebar {
+                height: 100vh;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 280px;
+                overflow-y: auto;
+                background-color: #161b22;
+                padding: 15px;
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .content {
+                margin-left: 280px;
+                padding: 20px;
+            }
+
+            .nav-folder {
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .nav-folder .fa-folder {
+                transition: transform 0.2s ease;
+            }
+
+            .nav-folder.collapsed .fa-folder {
+                transform: rotate(-90deg);
+            }
+
+            .nav-link {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: clip;
+                color: #c9d1d9;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 12px;
+                border-radius: 6px;
+                transition: background 0.2s ease, color 0.2s ease;
+            }
+
+            .card {
+                background-color: #161b22;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 6px;
+                color: #c9d1d9;
+            }
+
+            .nav-link:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: #fff;
+            }
+
+            .nav-link.active {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: #fff;
+            }
+
+            .nav-dir {
+                margin: 0px !important;
+            }
+
+            .folder-container {
+                padding-left: 10px;
+            }
+
+            .func-name {
+                color: #7ea2ee;
+            }
+
+            .func-param-name {
+                color: #99c671;
+            }
+
+            .func-param-type {
+                color: #e9c38b;
+            }
+
+            .func-return-type {
+                color: #e9c38b;
+            }
+
+            .bg-public {
+                background-color: #275b73;
+                color: #fff;
+            }
+
+            pre {
+                padding: 10px;
+                background-color: #020303;
+                border-radius: 6px;
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="sidebar">
+            <ul class="nav flex-column">
+                <% function renderModules(modules, parent = "") { %>
+                    <%
+                        let keys = Object.keys(modules);
+                        keys.sort((a, b) => {
+                            let isAFolder = typeof modules[a] === 'object';
+                            let isBFolder = typeof modules[b] === 'object';
+                            return isAFolder === isBFolder ? a.localeCompare(b) : isBFolder - isAFolder;
+                        });
+                    %>
+
+                    <% keys.forEach(folder => { %>
+                        <% if (typeof modules[folder] === 'object') { %>
+                            <li class="nav-item mt-3 nav-dir">
+                                <a class="nav-link" data-bs-toggle="collapse" href="#<%= parent + folder %>" role="button" aria-expanded="false" aria-controls="<%= parent + folder %>">
+                                    <i class="fa-solid fa-folder"></i> <span class="d-inline-block w-100"><%= folder %></span>
+                                </a>
+                                <div class="collapse" id="<%= parent + folder %>">
+                                    <ul class="nav flex-column ms-3">
+                                        <%= renderModules(modules[folder], parent + folder + "-") %>
+                                    </ul>
+                                </div>
+                            </li>
+                        <% } else { %>
+                            <li class="nav-item">
+                                <a href="?m=<%= modules[folder] %>" class="nav-link">
+                                    <i class="fa-solid fa-cube"></i> <span class="d-inline-block w-100"><%= folder %></span>
+                                </a>
+                            </li>
+                        <% } %>
+                    <% }) %>
+                <% } %>
+
+                <%
+                let moduleTree = {};
+                modules.forEach(module => {
+                    let parts = module.name.split('/');
+                    let node = moduleTree;
+                    for (let i = 0; i < parts.length - 1; i++) {
+                        if (!node[parts[i]]) node[parts[i]] = {};
+                        node = node[parts[i]];
+                    }
+                    node[parts[parts.length - 1]] = module.name;
+                });
+                %>
+
+                <%= renderModules(moduleTree) %>
+            </ul>
+        </nav>
+
+        <main class="content p-4 vh-100">
+            <% if (!query.m) { %>
+                <div class="d-flex justify-content-center align-items-center" style="height: 100%;">
+                    <div class="text-center">
+                        <h2 class="display-4" id="welcome">Welcome</h2>
+                        <p class="lead">Select a module from the sidebar to view its documentation.</p>
+                    </div>
+                </div>
+            <% } else { %>
+                <%
+                    var module = modules.find(m => m.name === query.m);
+                %>
+                <h1><%= module.name %></h1>
+                <p><%= module.description %></p>
+
+                <hr />
+                <h4>Functions</h4>
+                <div>
+                    <% module.functions.forEach(func => { %>
+                        <%
+                            let funcStr = '';
+                            // TODO: currently ALCL only supports public functions, add support for other visibilities later.
+                            funcStr += '<span class="badge bg-public">public</span> ';
+                            funcStr += '<span class="func-name">' + func.name + '</span>(';
+                            func.parameters.forEach((param, i) => {
+                                funcStr += '<span class="func-param-name">' + param.name + '</span>';
+                                funcStr += ': <span class="func-param-type">' + param.type + '</span>';
+                                if (i < func.parameters.length - 1) funcStr += ', ';
+                            });
+                            funcStr += ')';
+
+                            if (func.returns) {
+                                funcStr += ': <span class="func-return-type">' + func.returns + '</span>';
+                            }
+                        %>
+                        <div class="mb-3 card p-3">
+                            <pre class="mb-1"><code><%- funcStr %></code></pre>
+                            <span><%= func.description == "" ? "No description." : func.description %></span>
+                        </div>
+                    <% }) %>
+                </div>
+
+            <% } %>
+        </main>
+
+        <script>
+            let welcome = document.getElementById('welcome');
+            let date = new Date();
+            let hours = date.getHours();
+            let message = 'Welcome';
+            if (hours >= 5 && hours < 12) {
+                message = 'Good Morning';
+            } else if (hours >= 12 && hours < 18) {
+                message = 'Good Afternoon';
+            } else if (hours >= 18 && hours < 22) {
+                message = 'Good Evening';
+            } else if (hours >= 22 || hours < 5) {
+                message = 'Good Night';
+            }
+
+            welcome.innerText = message;
+        </script>
+        <script src="/bootstrap.bundle.min.js"></script>
+    </body>
+</html>

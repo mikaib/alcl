@@ -1,7 +1,0 @@
-func even(n) {
-    return n == 0 || odd(n - 1);
-}
-
-func odd(n) {
-    return n != 0 && even(n - 1);
-}

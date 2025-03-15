@@ -1,0 +1,59 @@
+// Recursive Multi Call
+func even(n) {
+    return n == 0 || odd(n - 1);
+}
+
+func odd(n) {
+    return n != 0 && even(n - 1);
+}
+
+// Recursive self-call
+func fibb(n) {
+    if (n == 0) {
+        return 0;
+    } else if (n == 1) {
+        return 1;
+    } else {
+        return fibb(n - 1) + fibb(n - 2);
+    }
+}
+
+// Null-type resolution
+func null_type_resolution() {
+    var x;
+    x = null;
+    x = 3.1;
+    x = null;
+    x = 5;
+    x = null;
+
+    #assert_type x Float64
+}
+
+// Null-type resolution multiple
+func null_type_resolution_multiple() {
+    var x;
+    var y;
+    x = null;
+    y = x;
+    x = 3.1;
+    y = x;
+    x = null;
+    x = 5;
+    y = x;
+    x = null;
+
+    #assert_type y Float64
+    #assert_type x Float64
+}
+
+// Var-to-var assignment
+func var_to_var_assignment() {
+    var x;
+    var y;
+    var z = x = y = 1.0;
+
+    #assert_type x Float64
+    #assert_type y Float64
+    #assert_type z Float64
+}

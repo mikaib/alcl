@@ -150,19 +150,21 @@ class AnalyserScope {
         scope._children.push(this);
     }
 
-    public function mergeScope(scope: AnalyserScope): Void {
-        for (variable in scope._variables) {
-            if (variable.fromMerger) {
-                continue;
-            }
+    public function mergeScope(scope: AnalyserScope, mergeVars: Bool = false, mergeChildren: Bool = false): Void {
+        if (mergeVars) {
+            for (variable in scope._variables) {
+                if (variable.fromMerger) {
+                    continue;
+                }
 
-            if (!_varLookup.exists(variable.name)) {
-                var newVar = variable.copy();
-                newVar.fromMerger = true;
-                _variables.push(newVar);
-                _varLookup.set(variable.name, newVar);
-            } else {
-                _analyser.emitError(null, ErrorType.VariableAlreadyDefined, 'variable ' + variable.name + ' is already defined');
+                if (!_varLookup.exists(variable.name)) {
+                    var newVar = variable.copy();
+                    newVar.fromMerger = true;
+                    _variables.push(newVar);
+                    _varLookup.set(variable.name, newVar);
+                } else {
+                    _analyser.emitError(null, ErrorType.VariableAlreadyDefined, 'variable ' + variable.name + ' is already defined');
+                }
             }
         }
 
@@ -185,8 +187,10 @@ class AnalyserScope {
             _castMethods.push(castMethod);
         }
 
-        for (child in scope._children) {
-            _children.push(child);
+        if (mergeChildren) {
+            for (child in scope._children) {
+                _children.push(child);
+            }
         }
     }
 
