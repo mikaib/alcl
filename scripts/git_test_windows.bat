@@ -7,7 +7,7 @@ setlocal enabledelayedexpansion
 set TEST_FILES=
 for /r %%F in (*) do (
     set FILE=%%~nxF
-    set TEST_FILES=!TEST_FILES! !FILE!
+    set TEST_FILES=!TEST_FILES! tests/!FILE!
 )
 cd /d ..
 

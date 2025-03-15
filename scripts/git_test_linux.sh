@@ -2,7 +2,7 @@ echo "Running tests..."
 echo "Current directory: $PWD"
 
 cd ./tests
-TEST_FILES=$(find . -type f | sed 's|^\./||')
+TEST_FILES=$(find . -type f | sed 's|^\./|tests/|')
 cd ..
 
 echo "Test files:"
