@@ -1,21 +1,25 @@
 package util;
 
 class CommandLine {
-
     private var _raw: Array<String>;
-    private var _parsed: Map<String, Dynamic>;
-    private var _optionCallbacks: Map<String, String->Void>;
+    private var _parsed: Map<String, Array<Dynamic>>;
+    private var _optionCallbacks: Map<String, Array<String->Void>>;
     private var _optionCategories: Map<String, Array<String>>;
     private var _optionDescriptions: Map<String, String>;
     private var _rest: Array<String>;
+    private var _defines: Map<String, String> = [
+        "DUMP_AST" => "Dump the AST after parsing, will not output any code",
+        "DUMP_AST_STDOUT" => "If DUMP_AST is set, dump the AST to stdout instead of 'ast.json'",
+        "NO_STDLIB" => "Do not include the standard library as a dependency",
+    ];
 
     public function new() {
         _raw = Sys.args();
         _rest = [];
-        _parsed = [];
-        _optionCallbacks = [];
-        _optionCategories = [];
-        _optionDescriptions = [];
+        _parsed = new Map();
+        _optionCallbacks = new Map();
+        _optionCategories = new Map();
+        _optionDescriptions = new Map();
     }
 
     public function parse(): Void {
@@ -23,10 +27,14 @@ class CommandLine {
         for (arg in _raw) {
             if (arg.charAt(0) == "-") {
                 key = arg.substr(1);
-                _parsed.set(key, null);
+                if (!_parsed.exists(key)) {
+                    _parsed.set(key, []);
+                }
+                _parsed.get(key).push(true);
             } else {
                 if (key != null) {
-                    _parsed.set(key, arg);
+                    _parsed.get(key).pop();
+                    _parsed.get(key).push(arg);
                     key = null;
                 } else {
                     _rest.push(arg);
@@ -36,7 +44,11 @@ class CommandLine {
 
         for (key in _parsed.keys()) {
             if (_optionCallbacks.exists(key)) {
-                _optionCallbacks.get(key)(_parsed.get(key));
+                for (callback in _optionCallbacks.get(key)) {
+                    for (value in _parsed.get(key)) {
+                        callback(Std.string(value));
+                    }
+                }
             }
         }
     }
@@ -46,20 +58,24 @@ class CommandLine {
         Logging.print("Usage: alcl [options] [files]");
 
         for (category in _optionCategories.keys()) {
-            Logging.print("");
-            Logging.print(category + ":");
+            Logging.print("\n" + category + ":");
             for (option in _optionCategories.get(category)) {
                 Logging.print("  -" + option + ": " + _optionDescriptions.get(option));
             }
         }
+
+        Logging.print("\nDefines:");
+        for (define in _defines.keys()) {
+            Logging.print("  -D " + define + ": " + _defines.get(define));
+        }
     }
 
-    public function get(key: String): Dynamic {
-        return _parsed.get(key);
+    public function get(key: String): Array<Dynamic> {
+        return _parsed.exists(key) ? _parsed.get(key) : [];
     }
 
-    public function getOrDefault(key: String, defaultValue: Dynamic): Dynamic {
-        return _parsed.get(key) == null ? defaultValue : _parsed.get(key);
+    public function getFirstOrDefault(key: String, defaultValue: Dynamic): Dynamic {
+        return _parsed.exists(key) && _parsed.get(key).length > 0 ? _parsed.get(key)[0] : defaultValue;
     }
 
     public function has(key: String): Bool {
@@ -71,14 +87,15 @@ class CommandLine {
     }
 
     public function addOption(name: String, category: String, description: String, callback: String->Void): Void {
-        _optionCallbacks.set(name, callback);
+        if (!_optionCallbacks.exists(name)) {
+            _optionCallbacks.set(name, []);
+        }
+        _optionCallbacks.get(name).push(callback);
         _optionDescriptions.set(name, description);
 
         if (!_optionCategories.exists(category)) {
             _optionCategories.set(category, []);
         }
-
         _optionCategories.get(category).push(name);
     }
-
 }

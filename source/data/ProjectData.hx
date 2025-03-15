@@ -10,6 +10,7 @@ import ast.Parser;
 import printer.Printer;
 import ast.Node;
 import analysis.Analyser;
+import analysis.AnalyserType;
 
 class ProjectData {
     private var _importMap: Map<String, String> = [];
@@ -314,6 +315,7 @@ class ProjectData {
      */
     public function build(isDependency: Bool = false): Bool {
         var start = Sys.time();
+        _dumpAst = hasDefine('dump_ast');
 
         for (dependency in _dependencies) {
             if (_verbose) Logging.debug('Building dependency: ${dependency.getProjectName()}');
@@ -476,19 +478,37 @@ class ProjectData {
 
                 _builtFileMap[baseLoc] = true;
             } else {
-                _astMap[baseLoc] = parser.getRoot().deepCopy(false);
+                var node = parser.getRoot().deepCopy(false, false);
+                _astMap[baseLoc] = node;
             }
         }
 
         // final code
         if (!isDependency) {
             if (_dumpAst) {
-                var json = haxe.Json.stringify(_astMap, null, "\t");
-                var outputFilename = Path.join([_outputDirectory, "ast.json"]);
-                createDirectoryRecursive(Path.directory(outputFilename));
-                File.saveContent(outputFilename, json);
+                function recurseNode(node: Node): Void {
+                    for (child in node.children) {
+                        recurseNode(child);
+                    }
 
-                Logging.info('Dumped AST to ${outputFilename}');
+                    node.analysisScope = null;
+                }
+
+                for (key in _astMap.keys()) {
+                    recurseNode(_astMap[key]);
+                }
+
+                var json = haxe.Json.stringify(_astMap, null, "\t");
+
+                if (hasDefine("dump_ast_stdout")) {
+                    Sys.println(json);
+                } else {
+                    var outputFilename = Path.join([_outputDirectory, "ast.json"]);
+                    createDirectoryRecursive(Path.directory(outputFilename));
+                    File.saveContent(outputFilename, json);
+
+                    Logging.info('Dumped AST to ${outputFilename}');
+                }
             }
 
             if (_verbose) {

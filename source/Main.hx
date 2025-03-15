@@ -38,7 +38,6 @@ class Main {
         cli.addOption("define", "Basics", "Add a define to the project", value -> project.addDefine(value));
         cli.addOption("D", "Basics", "Add a define to the project (alias)", value -> project.addDefine(value));
         cli.addOption("std", "Advanced", "Set the directory of the standard library", value -> project.setStdLibDirectory(value));
-        cli.addOption("ast", "Advanced", "Output the AST of the entire project", value -> project.setDumpAst(true));
         cli.parse();
 
         var rest = cli.getRest();
