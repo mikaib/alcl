@@ -6,6 +6,7 @@ import errors.ErrorType;
 import sys.FileSystem;
 import cbuild.CMakeInterface;
 import cbuild.CBuild;
+import util.Logging;
 
 class Main {
 
@@ -42,8 +43,7 @@ class Main {
 
         var rest = cli.getRest();
         if (rest.length <= 0) {
-            cli.printHelp();
-            return;
+            Logging.warn("No input files given! Only stdlib will be compiled.");
         }
 
         var errors: ErrorContainer = new ErrorContainer();

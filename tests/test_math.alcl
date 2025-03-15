@@ -1,4 +1,5 @@
 need "alcl/compiler_testing"
+need "math"
 
 func arithmetic(): Void {
     alcl_test_float("Arithmetic Addition", 5 + 3, 8);
@@ -22,7 +23,7 @@ func large(): Void {
     alcl_test_float("Large Division", 1000000000 / 5000, 200000);
 }
 
-func division_by_zero(abc): Void {
+func division_by_zero(): Void {
 //     assert_eq(10 / 0, 0);
 //     assert_eq(0 / 0, 0);
 }
@@ -85,6 +86,33 @@ func other() {
     alcl_test_float("Other 2",  (1.0 / ((10.0) * 10.0)), 0.01);
 }
 
+
+func std_math_functions(): Void {
+    var PI = 3.14159265358979323846;
+    alcl_test_float("Stdlib Math Sin", sin(0), 0);
+    alcl_test_float("Stdlib Math Sin 90", sin(PI / 2), 1);
+    alcl_test_float("Stdlib Math Cos", cos(0), 1);
+    alcl_test_float("Stdlib Math Cos 90", cos(PI / 2), 0);
+    alcl_test_float("Stdlib Math Tan", tan(0), 0);
+    alcl_test_float("Stdlib Math Tan 45", tan(PI / 4), 1);
+    alcl_test_float("Stdlib Math Sqrt", sqrt(9), 3);
+    alcl_test_float("Stdlib Math Sqrt 16", sqrt(16), 4);
+    alcl_test_float("Stdlib Math Log", log(1), 0);
+    alcl_test_float("Stdlib Math Log e", log(exp(1)), 1);
+    alcl_test_float("Stdlib Math Exp", exp(0), 1);
+    alcl_test_float("Stdlib Math Exp 1", exp(1), 2.718281828459045);
+    alcl_test_float("Stdlib Math Pow", pow(2, 3), 8);
+    alcl_test_float("Stdlib Math Pow 10^2", pow(10, 2), 100);
+    alcl_test_float("Stdlib Math Abs Positive", abs(5), 5);
+    alcl_test_float("Stdlib Math Abs Negative", abs(-5), 5);
+    alcl_test_float("Stdlib Math Floor", floor(3.7), 3);
+    alcl_test_float("Stdlib Math Ceil", ceil(3.2), 4);
+    alcl_test_float("Stdlib Math Round Up", round(3.7), 4);
+    alcl_test_float("Stdlib Math Round Down", round(3.2), 3);
+    alcl_test_float("Stdlib Math Min", min(5, 10), 5);
+    alcl_test_float("Stdlib Math Max", max(5, 10), 10);
+}
+
 func test_math(): Void {
     arithmetic();
     negative();
@@ -99,4 +127,5 @@ func test_math(): Void {
     binop_vs_unaryop();
     int_and_float();
     other();
+    std_math_functions();
 }

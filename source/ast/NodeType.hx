@@ -11,6 +11,8 @@ enum NodeType {
     FunctionDeclReturnType;
     FunctionDeclBody;
     FunctionDeclNativeBody;
+    FunctionDeclExternBody;
+    FunctionDeclExternHeader;
     FunctionCall;
     FunctionCallParam;
     VarDef;

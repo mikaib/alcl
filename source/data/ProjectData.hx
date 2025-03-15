@@ -463,7 +463,11 @@ class ProjectData {
                 Logging.error('Missing parser for file "$file"');
                 return false;
             }
-            var baseLoc = removeTrailingOrLeadingSlashes(StringTools.replace(StringTools.replace(file.split('.alcl').join(''), _rootDirectory, ""), "\\", "/"));
+            var ogLoc = removeTrailingOrLeadingSlashes(StringTools.replace(StringTools.replace(file.split('.alcl').join(''), _rootDirectory, ""), "\\", "/"));
+            var parts = ogLoc.split('/');
+            parts[parts.length - 1] = 'alcl_' + parts[parts.length - 1];
+            var baseLoc = parts.join('/');
+
             var baseLocDir = Path.directory(baseLoc);
             var printer = new Printer(parser, this, baseLocDir);
             if (!_dumpAst) {
@@ -479,7 +483,7 @@ class ProjectData {
                 _builtFileMap[baseLoc] = true;
             } else {
                 var node = parser.getRoot().deepCopy(false, false);
-                _astMap[baseLoc] = node;
+                _astMap[ogLoc] = node;
             }
         }
 

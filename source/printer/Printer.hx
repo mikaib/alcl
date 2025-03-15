@@ -37,7 +37,11 @@ class Printer {
                 continue;
             }
 
-            headers += '#include "${FsUtil.resolvePath(_baseLocDir, lib)}.h"\n';
+            var path = FsUtil.resolvePath(_baseLocDir, lib);
+            var parts = path.split('/');
+            parts[parts.length - 1] = 'alcl_' + parts[parts.length - 1];
+
+            headers += '#include "${parts.join('/')}.h"\n';
         }
 
         var code = "";
@@ -65,7 +69,11 @@ class Printer {
                 continue;
             }
 
-            headers += '#include "${FsUtil.resolvePath(_baseLocDir, lib)}.h"\n';
+            var path = FsUtil.resolvePath(_baseLocDir, lib);
+            var parts = path.split('/');
+            parts[parts.length - 1] = 'alcl_' + parts[parts.length - 1];
+
+            headers += '#include "${parts.join('/')}.h"\n';
         }
 
         var code = "";
@@ -237,6 +245,12 @@ class Printer {
         var nativeBody = findChildOfType(node, NodeType.FunctionDeclNativeBody);
         if (nativeBody != null) {
             return '${prefix}${_types.convertTypeAlclToC(node.analysisType.toString())} ${node.value}(${paramStr}) {${nativeBody.value}}\n\n';
+        }
+
+        var externBody = findChildOfType(node, NodeType.FunctionDeclExternBody);
+        if (externBody != null) {
+            _funcDefs.pop();
+            return '';
         }
 
         return "";

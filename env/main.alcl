@@ -1,3 +1,5 @@
+need "math"
+
 func main() {
-    return 1 + 2;
+    return abs(-5);
 }

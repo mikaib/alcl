@@ -292,6 +292,18 @@ class ParserContext {
             );
 
             funcNode.children.push(nativeFuncBodyNode);
+        } else if (_meta.exists("extern")) {
+            var funcBodyPos = getBoundaryTokensOfDelim(TokenType.LeftBrace, TokenType.RightBrace);
+            var externFuncBodyNode = createNode(NodeType.FunctionDeclExternBody, funcBodyPos.start, funcBodyPos.end, funcNode, _meta.get("extern")[0]?.value ?? funcNode.value);
+            funcNode.children.push(externFuncBodyNode);
+
+            if (_meta.exists('header_stack')) {
+                var headerStack = _meta.get('header_stack');
+                for (header in headerStack) {
+                    var n = createNode(NodeType.FunctionDeclExternHeader, funcBodyPos.start, funcBodyPos.end, externFuncBodyNode, header.value);
+                    funcNode.children.push(n);
+                }
+            }
         } else {
             var funcBodyTokens: Array<Token> = getTokenArrayDelim(TokenType.LeftBrace, TokenType.RightBrace);
             var funcBodyNode = createNode(
@@ -782,6 +794,12 @@ class ParserContext {
             case "native_header":
                 var headerName = tokenizer.tokens[0].value;
                 _parser.ensureHeader(headerName);
+
+                if (!_meta.exists('header_stack')) {
+                    _meta.set('header_stack', []);
+                }
+
+                _meta.get('header_stack').push({ type: TokenType.Identifier, value: headerName, line: 0, column: 0, index: 0 });
             case "ctype":
                 var alclType: String = tokenizer.tokens[0].value;
                 var cType: String = tokenizer.tokens[1].value;

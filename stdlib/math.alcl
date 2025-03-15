@@ -1,0 +1,107 @@
+#native_header "math.h"
+#extern
+func acos(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func asin(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func atan(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func atan2(y: Float64, x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func cos(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func cosh(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func sin(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func sinh(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func tan(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func tanh(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func exp(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func log(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func log10(x: Float64): Float64 {}
+
+#native_header "math.h"
+#native_function
+func modf_int(x: Float64): Float64 {
+    double int_part, frac_part;
+    frac_part = modf(x, &int_part);
+    return int_part;
+}
+
+#native_header "math.h"
+#native_function
+func modf_frac(x: Float64): Float64 {
+    double int_part, frac_part;
+    frac_part = modf(x, &int_part);
+    return frac_part;
+}
+
+#native_header "math.h"
+#extern
+func pow(x: Float64, y: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func sqrt(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func ceil(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func fabs(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func floor(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func fmod(x: Float64, y: Float64): Float64 {}
+
+#native_header "math.h"
+#extern
+func round(x: Float64): Float64 {}
+
+#native_header "math.h"
+#extern "fabs"
+func abs(x: Float64): Float64 {}
+
+func min(x: Float64, y: Float64): Float64 {
+    return x < y ? x : y;
+}
+
+func max(x: Float64, y: Float64): Float64 {
+    return x > y ? x : y;
+}

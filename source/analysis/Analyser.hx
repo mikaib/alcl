@@ -145,10 +145,21 @@ class Analyser {
                 } else {
                     var params = findAllChildrenOfType(node, NodeType.FunctionCallParam);
                     if (params.length != func.params.length) {
-                        emitError(node, ErrorType.ArgumentCountMismatch, 'expected ${func.params.length} arguments, got ${params.length}');
+                        emitError(node, ErrorType.ArgumentCountMismatch, 'function ${func.name} expected ${func.params.length} arguments, got ${params.length}');
                     } else {
                         for (i in 0...params.length) {
                             addTypeConstraint(node, func.params[i].type, params[i].analysisType, INFERENCE_USAGE);
+                        }
+                    }
+
+                    if (func.isExtern) {
+                        var headers = func.headers;
+                        for (header in headers) {
+                            _parser.ensureHeader(header);
+                        }
+
+                        if (func.remapTo != null) {
+                            node.value = func.remapTo;
                         }
                     }
 
@@ -187,21 +198,36 @@ class Analyser {
                 node.parent.analysisScope.defineFunction(node.value, node.analysisType, fParams, node);
                 addTypeHint(node, TVoid, node.analysisType);
 
-                if (findChildOfType(node, NodeType.FunctionDeclNativeBody) != null) {
+                var nativeBody = findChildOfType(node, NodeType.FunctionDeclNativeBody);
+                var externBody = findChildOfType(node, NodeType.FunctionDeclExternBody);
+                var body = findChildOfType(node, NodeType.FunctionDeclBody);
+
+                var mustHaveAllTypes = nativeBody != null || externBody != null;
+                if (mustHaveAllTypes) {
                     if (node.analysisType.isUnknown()) {
-                        emitError(node, ErrorType.NativeFunctionMissingTypes, 'native function ${node.value} must have a return type');
+                        emitError(node, ErrorType.NativeFunctionMissingTypes, 'native/extern function ${node.value} must have a return type');
                     }
 
                     for (param in fParams) {
                         if (param.type.isUnknown()) {
-                            emitError(param.origin, ErrorType.NativeFunctionMissingTypes, 'native function ${node.value} must have a type for parameter ${param.name}');
+                            emitError(param.origin, ErrorType.NativeFunctionMissingTypes, 'native/extern function ${node.value} must have a type for parameter ${param.name}');
                         }
                     }
                 }
 
-                var body = findChildOfType(node, NodeType.FunctionDeclBody); // body is deferred, so we have to run it here
-                if (body != null) {
+                if (body != null) { // body is deferred, so we have to run it here
                     runAtNode(body, scope);
+                }
+
+                if (externBody != null ) {
+                    var func = node.parent.analysisScope.getFunction(node.value);
+                    func.isExtern = true;
+                    func.remapTo = externBody.value;
+
+                    var headers = findAllChildrenOfType(node, NodeType.FunctionDeclExternHeader);
+                    for (header in headers) {
+                        func.headers.push(header.value);
+                    }
                 }
 
             case NodeType.Ternary:
