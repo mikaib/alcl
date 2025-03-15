@@ -11,5 +11,5 @@ do
     echo "- $file"
 done
 
-./ALCL -verbose yes -cwd ./tests -compile cmake -std ../stdlib -output ../env/out/tests $TEST_FILES
+./ALCL -verbose -compile cmake -output ./env/out/tests $TEST_FILES
 echo "Tests generated!"
