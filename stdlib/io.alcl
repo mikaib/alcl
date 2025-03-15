@@ -1,5 +1,5 @@
 #native_header "stdio.h"
 #native_function
-func println(s: CString) {
+func println(s: CString): Void {
     printf("%s\n", s);
 }

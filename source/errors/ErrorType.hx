@@ -14,4 +14,8 @@ enum ErrorType {
     UninitializedVariable;
     UndefinedFunction;
     ArgumentCountMismatch;
+    VariableAlreadyDefined;
+    FunctionAlreadyDefined;
+    NativeFunctionMissingTypes;
+    CircularDependency;
 }

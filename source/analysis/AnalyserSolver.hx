@@ -21,14 +21,14 @@ class AnalyserSolver {
         var toRemove: Array<AnalyserConstraint> = [];
 
         while (changed) {
-            trace('SOLVE:');
+            // trace('SOLVE:');
             changed = false;
             constraints.sort((a, b) -> {
                 return b.priority - a.priority;
             });
 
             for (constraint in constraints) {
-                trace('    ' + constraint.toString());
+                // trace('    ' + constraint.toString());
 
                 if (constraint.solve(this)) {
                     toRemove.push(constraint);

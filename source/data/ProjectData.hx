@@ -25,6 +25,7 @@ class ProjectData {
     private var _astMap: Map<String, Node> = [];
     private var _builtFileMap: Map<String, Bool> = [];
     private var _parserMap: Map<String, Parser> = [];
+    private var _analyserMap: Map<String, Analyser> = [];
 
     /**
      * Set the dump AST flag for the project
@@ -256,6 +257,20 @@ class ProjectData {
     }
 
     /**
+     * Get the analyser map
+     */
+    public function getAnalyserMap(): Map<String, Analyser> {
+        return _analyserMap.copy();
+    }
+
+    /**
+     * Set the analyser map
+     */
+    public function setAnalyserMap(map: Map<String, Analyser>): Void {
+        _analyserMap = map;
+    }
+
+    /**
      * Run a build on the project
      */
     public function build(isDependency: Bool = false): Void {
@@ -270,6 +285,7 @@ class ProjectData {
             dependency.setParserMap(_parserMap);
             dependency.setBuiltFileMap(_builtFileMap);
             dependency.setVerbose(_verbose);
+            dependency.setAnalyserMap(_analyserMap);
             dependency.build(true);
         }
 
@@ -285,6 +301,7 @@ class ProjectData {
         }
 
         // tokenize + gen ASTs
+        var ownAnalysers: Array<Analyser> = [];
         for (file in _files) {
             if (getVerbose()) {
                 Logging.info('- ${file} [parse]');
@@ -307,48 +324,79 @@ class ProjectData {
             parser.parse();
             _parserMap[file] = parser;
 
+            var analyser = new Analyser(parser, file);
+            _analyserMap[baseLocOf(file)] = analyser;
+            ownAnalysers.push(analyser);
+
             if (baseLocOf(file) != "alcl/global" && parser.doesWantGlobalLib()) { // making sure primitive types and runtime libs are there.
                 parser.ensureRequirement("alcl/global");
             }
         }
 
-        // analyser
-        var analysers: Array<Analyser> = [];
+        var visited:Map<String, Bool> = [];
+        var sortedAnalysers:Array<Analyser> = [];
+
+        function visit(dep:String):Void {
+            if (visited.exists(dep)) return;
+            visited[dep] = true;
+            var analyser = _analyserMap[dep];
+            if (analyser != null) {
+                for (req in analyser.getParser().getLibRequirements()) {
+                    visit(req);
+                }
+                sortedAnalysers.push(analyser);
+            }
+        }
+
         for (file in _files) {
-            if (getVerbose()) {
-                Logging.info('- ${file} [verify]');
+            var base = baseLocOf(file);
+            visit(base);
+        }
+
+        for (analyser in sortedAnalysers) {
+            if (!ownAnalysers.contains(analyser)) {
+                continue;
             }
 
-            var parser = _parserMap[file];
-            if (parser == null) {
-                Logging.warn('Missing parser for file "$file"');
-                return;
-            }
-
-            var imports = parser.getLibRequirements();
-            var analyser = new Analyser(parser, file);
-            analysers.push(analyser);
-            analyser.run();
-
-            trace(file);
-            parser.print();
-
-            for (imp in imports) {
-                var resolved = resolveImport(imp);
-                var parserOfImport = _parserMap[resolved];
-
-                if (parserOfImport == null) {
-                    Logging.error('Could not resolve import ${imp} in ${file}');
+            var libAnalysers:Array<Analyser> = [];
+            for (dep in analyser.getParser().getLibRequirements()) {
+                var dependencyAnalyser = _analyserMap[dep];
+                if (dependencyAnalyser == null) {
+                    Logging.error('Could not resolve import ${dep}');
                     return;
                 }
 
-                parser.getTypes().copyFrom(parserOfImport.getTypes());
+                var selfLoc = baseLocOf(analyser.getFile());
+                function checkCircularDependency(analyser: Analyser, visited: Map<String, Bool>, chain: Array<String>): Void {
+                    var selfLoc = baseLocOf(analyser.getFile());
+                    if (visited.exists(selfLoc)) {
+                        chain.push(selfLoc);
+                        analyser.emitError(null, ErrorType.CircularDependency, 'Circular dependencies are not allowed: ${chain.join(" -> ")}');
+                        return;
+                    }
+                    visited.set(selfLoc, true);
+                    chain.push(selfLoc);
+                    for (subDep in analyser.getParser().getLibRequirements()) {
+                        var dependencyAnalyser = _analyserMap[subDep];
+                        if (dependencyAnalyser != null) {
+                            checkCircularDependency(dependencyAnalyser, visited, chain);
+                        }
+                    }
+                    chain.pop();
+                    visited.remove(selfLoc);
+                }
+                checkCircularDependency(analyser, [], []);
+
+                analyser.getParser().getTypes().copyFrom(dependencyAnalyser.getParser().getTypes());
+                libAnalysers.push(dependencyAnalyser);
             }
+            analyser.run(libAnalysers);
+            // analyser.getParser().print();
         }
 
         // log errors
         var hasErrors: Bool = false;
-        for (analyser in analysers) {
+        for (analyser in sortedAnalysers) {
             var errorContainer = analyser.getErrors();
             if (errorContainer.hasErrors()) {
                 hasErrors = true;

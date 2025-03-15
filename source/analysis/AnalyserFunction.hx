@@ -9,4 +9,17 @@ class AnalyserFunction {
     public var usages: Array<Node>;
     public var defined: Bool;
     public var origin: Node;
+    public var fromMerger: Bool = false;
+
+    public function copy(): AnalyserFunction {
+        return {
+            name: name,
+            type: type.toMutableType(),
+            params: params.map(function(p) return p.copy()),
+            usages: usages,
+            defined: defined,
+            origin: origin,
+            fromMerger: fromMerger
+        };
+    }
 }

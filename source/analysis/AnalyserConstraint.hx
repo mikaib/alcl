@@ -44,17 +44,29 @@ class AnalyserConstraint {
 
         if (a.isUnknown() && !b.isUnknown()) {
             a.setType(b);
+            a.setHintStatus(optional);
             return true;
         }
 
         if (!a.isUnknown() && b.isUnknown()) {
             b.setType(a);
+            b.setHintStatus(optional);
             return true;
         }
 
         if (!a.equals(b)) {
             if (a.isNumericalType() && b.isNumericalType()) {
                 promoteNumbers(solver); // TODO: needs fixing up, may change user defined types... not supposed to happen!!
+                return true;
+            }
+
+            if (a.isHint()) {
+                a.setType(b);
+                return true;
+            }
+
+            if (b.isHint()) {
+                b.setType(a);
                 return true;
             }
 

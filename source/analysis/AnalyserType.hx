@@ -4,6 +4,7 @@ package analysis;
 class AnalyserType {
 
     private var _type: Null<String>;
+    private var _isHint: Bool;
     private var _onChangeCallbacks: Array<Void->Void>;
 
     private var _id: Int;
@@ -35,6 +36,15 @@ class AnalyserType {
         _type = null;
         _onChangeCallbacks = [];
         _id = _count++;
+        _isHint = false;
+    }
+
+    public function isHint(): Bool {
+        return _isHint;
+    }
+
+    public function setHintStatus(isHint: Bool): Void {
+        _isHint = isHint;
     }
 
     public function onTypeChange(cb: Void->Void, runImmediately: Bool = true): Void {

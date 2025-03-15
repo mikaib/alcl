@@ -68,7 +68,14 @@ class Printer {
             headers += '#include "${FsUtil.resolvePath(_baseLocDir, lib)}.h"\n';
         }
 
-        var code = printChildren(_root);
+        var code = "";
+        var childrenStr = printChildren(_root);
+
+        for (funcDef in _funcDefs) {
+            code += funcDef;
+        }
+
+        code += "\n" + childrenStr;
         var res = headers + "\n" + code;
 
         return res;

@@ -14,6 +14,7 @@ class Analyser {
     private var _parser: Parser;
     private var _solver: AnalyserSolver;
     private var _file: String;
+    private var _mainScope: AnalyserScope;
 
     private var _compareOps: Array<String> = ["||", "&&", "|", "^", "&", "==", "!=", "<", "<=", ">", ">=", "!", "~"];
     private var TInt32: AnalyserFixedType = AnalyserType.createFixedType("Int32");
@@ -30,6 +31,11 @@ class Analyser {
         _errors = new ErrorContainer();
         _solver = new AnalyserSolver(this);
         _file = file ?? "Internal";
+        _mainScope = new AnalyserScope(this);
+    }
+
+    public function getFile(): String {
+        return _file;
     }
 
     public function createNode(type: NodeType, parent: Node, ?tokenStart: Token, ?tokenEnd: Token, ?value: String): Node {
@@ -53,7 +59,7 @@ class Analyser {
         var err: Error = {
             message: msg ?? "Generic Error",
             type: type ?? ErrorType.GenericError,
-            position: { line: node.line, column: node.column, file: _file },
+            position: { line: node?.line ?? 0, column: node?.column ?? 0, file: _file },
             stack: []
         };
 
@@ -157,7 +163,7 @@ class Analyser {
                 for (param in params) {
                     var paramType = findChildOfType(param, NodeType.FunctionDeclParamType);
                     if (paramType != null) {
-                        addTypeConstraint(param, param.analysisType, paramType.analysisType, USER);
+                        param.analysisType.setTypeStr(paramType.value);
                     }
 
                     fParams.push({
@@ -170,11 +176,28 @@ class Analyser {
                 }
 
                 if (returnType != null) {
-                    addTypeConstraint(node, node.analysisType, returnType.analysisType, USER);
+                    node.analysisType.setTypeStr(returnType.value);
+                }
+
+                var existing = scope.getFunction(node.value);
+                if (existing != null && existing.defined) {
+                    emitError(node, ErrorType.FunctionAlreadyDefined, 'function ${node.value} already defined');
                 }
 
                 node.parent.analysisScope.defineFunction(node.value, node.analysisType, fParams, node);
                 addTypeHint(node, TVoid, node.analysisType);
+
+                if (findChildOfType(node, NodeType.FunctionDeclNativeBody) != null) {
+                    if (node.analysisType.isUnknown()) {
+                        emitError(node, ErrorType.NativeFunctionMissingTypes, 'native function ${node.value} must have a return type');
+                    }
+
+                    for (param in fParams) {
+                        if (param.type.isUnknown()) {
+                            emitError(param.origin, ErrorType.NativeFunctionMissingTypes, 'native function ${node.value} must have a type for parameter ${param.name}');
+                        }
+                    }
+                }
 
                 var body = findChildOfType(node, NodeType.FunctionDeclBody); // body is deferred, so we have to run it here
                 if (body != null) {
@@ -198,11 +221,15 @@ class Analyser {
                 mustHaveBetweenChildrenAmount(node, 0, 2);
 
                 if (varType != null) {
-                    addTypeConstraint(node, node.analysisType, varType.analysisType, USER);
+                    node.analysisType.setTypeStr(varType.value);
                 }
 
                 if (varValue != null) {
                     addTypeConstraint(node, node.analysisType, varValue.analysisType, INFERENCE);
+                }
+
+                if (scope.getVariable(node.value) != null) {
+                    emitError(node, ErrorType.VariableAlreadyDefined, 'variable ${node.value} already defined');
                 }
 
                 scope.defineVariable(node.value, node.analysisType, node, varValue != null);
@@ -468,13 +495,31 @@ class Analyser {
         });
     }
 
-    public function run(): Void {
-        var scope: AnalyserScope = new AnalyserScope(this);
+    public function getMainScope(): AnalyserScope {
+        return _mainScope;
+    }
 
-        // Pass 1: Create constraints and verify validity of nodes.
+    public function getParser(): Parser {
+        return _parser;
+    }
+
+    public function clearMainScope(): Void {
+        _mainScope = new AnalyserScope(this);
+    }
+
+    public function run(libraries: Array<Analyser>): Void {
+        clearMainScope();
+        var scope: AnalyserScope = getMainScope();
+
+        // Pass 1: Merge library scopes into main scope
+        for (lib in libraries) {
+            scope.mergeScope(lib.getMainScope());
+        }
+
+        // Pass 2: Create constraints and verify validity of nodes.
         runAtNode(_parser.getRoot(), scope);
 
-        // Pass 2: Check undefined functions (needed for recursive functions)
+        // Pass 3: Check undefined functions (done in seperate pass to allow for functions calling each other)
         function checkUndefinedFunctions(scope: AnalyserScope): Void {
             for (func in scope.getFunctions()) {
                 if (!func.defined) {
@@ -490,7 +535,7 @@ class Analyser {
         }
         checkUndefinedFunctions(scope);
 
-        // Pass 3: Solve constraints
+        // Pass 4: Solve constraints
         _solver.solve();
     }
 

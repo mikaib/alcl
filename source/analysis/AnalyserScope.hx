@@ -1,5 +1,6 @@
 package analysis;
 import ast.Node;
+import errors.ErrorType;
 
 class AnalyserScope {
 
@@ -147,6 +148,46 @@ class AnalyserScope {
         _castMethods = shallowCopy ? scope._castMethods.copy() : scope._castMethods;
         _currentFunctionNode = scope._currentFunctionNode;
         scope._children.push(this);
+    }
+
+    public function mergeScope(scope: AnalyserScope): Void {
+        for (variable in scope._variables) {
+            if (variable.fromMerger) {
+                continue;
+            }
+
+            if (!_varLookup.exists(variable.name)) {
+                var newVar = variable.copy();
+                newVar.fromMerger = true;
+                _variables.push(newVar);
+                _varLookup.set(variable.name, newVar);
+            } else {
+                _analyser.emitError(null, ErrorType.VariableAlreadyDefined, 'variable ' + variable.name + ' is already defined');
+            }
+        }
+
+        for (func in scope._functions) {
+            if (func.fromMerger) {
+                continue;
+            }
+
+            if (!_funcLookup.exists(func.name)) {
+                var newFunc = func.copy();
+                newFunc.fromMerger = true;
+                _functions.push(newFunc);
+                _funcLookup.set(func.name, newFunc);
+            } else {
+                _analyser.emitError(null, ErrorType.FunctionAlreadyDefined, 'function ' + func.name + ' is already defined');
+            }
+        }
+
+        for (castMethod in scope._castMethods) {
+            _castMethods.push(castMethod);
+        }
+
+        for (child in scope._children) {
+            _children.push(child);
+        }
     }
 
     public function toDebugString(): String {

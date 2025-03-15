@@ -1,4 +1,22 @@
 @echo off
 call Scripts/Env
 haxe build.hxml
-hl binary/hashlink/out.hl -verbose -cwd ./tests -compile cmake -output ../env/out/tests -std ../stdlib test_ternary.alcl test_for.alcl test_math.alcl test_while.alcl test_comparisons.alcl tests.alcl
+echo Running tests...
+echo Current directory: %CD%
+
+cd /d Tests
+setlocal enabledelayedexpansion
+set TEST_FILES=
+for /r %%F in (*) do (
+    set FILE=%%~nxF
+    set TEST_FILES=!TEST_FILES! !FILE!
+)
+cd /d ..
+
+echo Test files:
+for %%F in (!TEST_FILES!) do echo - %%F
+
+hl binary/hashlink/out.hl -verbose yes -cwd ./tests -compile cmake -std ../stdlib -output ../env/out/tests !TEST_FILES!
+echo Tests generated!
+
+endlocal

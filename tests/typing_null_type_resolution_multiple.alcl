@@ -1,4 +1,4 @@
-func null_type_resolution() {
+func null_type_resolution_multiple() {
     var x;
     var y;
     x = null;
