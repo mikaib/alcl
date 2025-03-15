@@ -273,7 +273,7 @@ class ProjectData {
     /**
      * Run a build on the project
      */
-    public function build(isDependency: Bool = false): Void {
+    public function build(isDependency: Bool = false): Bool {
         var start = Sys.time();
 
         for (dependency in _dependencies) {
@@ -353,6 +353,8 @@ class ProjectData {
             visit(base);
         }
 
+        var hasErrors: Bool = false;
+
         for (analyser in sortedAnalysers) {
             if (!ownAnalysers.contains(analyser)) {
                 continue;
@@ -363,7 +365,8 @@ class ProjectData {
                 var dependencyAnalyser = _analyserMap[dep];
                 if (dependencyAnalyser == null) {
                     Logging.error('Could not resolve import ${dep}');
-                    return;
+                    hasErrors = true;
+                    continue;
                 }
 
                 var selfLoc = baseLocOf(analyser.getFile());
@@ -395,7 +398,6 @@ class ProjectData {
         }
 
         // log errors
-        var hasErrors: Bool = false;
         for (analyser in sortedAnalysers) {
             var errorContainer = analyser.getErrors();
             if (errorContainer.hasErrors()) {
@@ -405,7 +407,7 @@ class ProjectData {
         }
 
         if (hasErrors) {
-            Sys.exit(1);
+            return false;
         }
 
         // print ASTs
@@ -416,8 +418,8 @@ class ProjectData {
 
             var parser = _parserMap[file];
             if (parser == null) {
-                Logging.warn('Missing parser for file "$file"');
-                return;
+                Logging.error('Missing parser for file "$file"');
+                return false;
             }
             var baseLoc = removeTrailingOrLeadingSlashes(StringTools.replace(StringTools.replace(file.split('.alcl').join(''), _rootDirectory, ""), "\\", "/"));
             var baseLocDir = Path.directory(baseLoc);
@@ -453,6 +455,8 @@ class ProjectData {
                 Logging.success('Generation Done! Took ${Sys.time() - start} seconds.');
             }
         }
+
+        return true;
     }
 
     public function removeTrailingOrLeadingSlashes(path: String): String {

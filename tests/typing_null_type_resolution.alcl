@@ -5,6 +5,6 @@ func null_type_resolution() {
     x = null;
     x = 5;
     x = null;
-    
+
     #assert_type x Float64
 }

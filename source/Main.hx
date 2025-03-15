@@ -81,7 +81,11 @@ class Main {
         }
 
         errors.printErrors(true);
-        project.build();
+        var res = project.build();
+
+        if (res == false) {
+            Sys.exit(1);
+        }
 
         if (compileUsing == "") {
             return;
