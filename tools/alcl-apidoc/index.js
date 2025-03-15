@@ -85,6 +85,10 @@ function parseAst(ast) {
                     if (functionChild.type == 9) { // NATIVE FUNCTION
                         func.isNative = true;
                     }
+
+                    if (functionChild.type == 10) { // EXTERN FUNCTION
+                        func.isNative = true;
+                    }
                 }
 
                 func.setReturns(moduleRootChild.analysisType._type);
