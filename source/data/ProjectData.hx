@@ -366,7 +366,7 @@ class ProjectData {
             parser.parse();
             _parserMap[file] = parser;
 
-            var analyser = new Analyser(parser, file);
+            var analyser = new Analyser(parser, this, file);
             _analyserMap[baseLocOf(file)] = analyser;
             ownAnalysers.push(analyser);
 

@@ -41,9 +41,16 @@ class Main {
         cli.addOption("std", "Advanced", "Set the directory of the standard library", value -> project.setStdLibDirectory(value));
         cli.parse();
 
+        if (project.hasDefine("docgen")) {
+            project.addDefine("dump_ast");
+            project.addDefine("no_remap");
+            project.addDefine("allow_no_input");
+        }
+
         var rest = cli.getRest();
-        if (rest.length <= 0) {
-            Logging.warn("No input files given! Only stdlib will be compiled.");
+        if (rest.length <= 0 && !project.hasDefine('allow_no_input')) {
+            cli.printHelp();
+            return;
         }
 
         var errors: ErrorContainer = new ErrorContainer();

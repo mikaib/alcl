@@ -11,6 +11,9 @@ class CommandLine {
         "DUMP_AST" => "Dump the AST after parsing, will not output any code",
         "DUMP_AST_STDOUT" => "If DUMP_AST is set, dump the AST to stdout instead of 'ast.json'",
         "NO_STDLIB" => "Do not include the standard library as a dependency",
+        "NO_REMAP" => "Disables remapping of function names, might break alot of code!",
+        "ALLOW_NO_INPUT" => "Allow the compiler to run without any input files",
+        "DOCGEN" => "Sets all defines to generate documentation",
     ];
 
     public function new() {

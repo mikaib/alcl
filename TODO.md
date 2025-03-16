@@ -1,4 +1,9 @@
 ### todo:
+- assert_type and log_type meta tags
+- inline meta
+- import as
+- namespaces
+- link lib math on linux
 - conditional compilation
 - function visibility
 - check branches (if, else if, else) for return statements, and check that all branches return

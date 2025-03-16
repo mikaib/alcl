@@ -7,6 +7,7 @@ import ast.NodeType;
 import errors.ErrorType;
 import errors.Error;
 import tokenizer.Token;
+import data.ProjectData;
 
 class Analyser {
 
@@ -15,6 +16,7 @@ class Analyser {
     private var _solver: AnalyserSolver;
     private var _file: String;
     private var _mainScope: AnalyserScope;
+    private var _project: ProjectData;
 
     private var _compareOps: Array<String> = ["||", "&&", "|", "^", "&", "==", "!=", "<", "<=", ">", ">=", "!", "~"];
     private var TInt32: AnalyserFixedType = AnalyserType.createFixedType("Int32");
@@ -26,12 +28,13 @@ class Analyser {
     private var TVoid: AnalyserFixedType = AnalyserType.createFixedType("Void");
     private var TUnknown: AnalyserFixedType = AnalyserType.createUnknownType().toFixed();
 
-    public function new(parser: Parser, ?file: String) {
+    public function new(parser: Parser, project: ProjectData, ?file: String) {
         _parser = parser;
         _errors = new ErrorContainer();
         _solver = new AnalyserSolver(this);
         _file = file ?? "Internal";
         _mainScope = new AnalyserScope(this);
+        _project = project;
     }
 
     public function getFile(): String {
@@ -157,10 +160,10 @@ class Analyser {
                         for (header in headers) {
                             _parser.ensureHeader(header);
                         }
+                    }
 
-                        if (func.remapTo != null) {
-                            node.value = func.remapTo;
-                        }
+                    if (func.remapTo != null) {
+                        node.value = func.remapTo;
                     }
 
                     addTypeConstraint(node, node.analysisType, func.type, INFERENCE);
@@ -195,32 +198,39 @@ class Analyser {
                     emitError(node, ErrorType.FunctionAlreadyDefined, 'function ${node.value} already defined');
                 }
 
-                node.parent.analysisScope.defineFunction(node.value, node.analysisType, fParams, node);
-                addTypeHint(node, TVoid, node.analysisType);
-
+                var funcName = node.value;
                 var nativeBody = findChildOfType(node, NodeType.FunctionDeclNativeBody);
                 var externBody = findChildOfType(node, NodeType.FunctionDeclExternBody);
+                var noRemapTag = findChildOfType(node, NodeType.FunctionDeclNoRemap);
                 var body = findChildOfType(node, NodeType.FunctionDeclBody);
+
+                if (externBody == null && noRemapTag == null && !_project.hasDefine('no_remap')) {
+                    node.value = '__alcl_${funcName}';
+                }
+
+                node.parent.analysisScope.defineFunction(funcName, node.analysisType, fParams, node, node.value);
+                addTypeHint(node, TVoid, node.analysisType);
 
                 var mustHaveAllTypes = nativeBody != null || externBody != null;
                 if (mustHaveAllTypes) {
                     if (node.analysisType.isUnknown()) {
-                        emitError(node, ErrorType.NativeFunctionMissingTypes, 'native/extern function ${node.value} must have a return type');
+                        emitError(node, ErrorType.NativeFunctionMissingTypes, 'native/extern function ${funcName} must have a return type');
                     }
 
                     for (param in fParams) {
                         if (param.type.isUnknown()) {
-                            emitError(param.origin, ErrorType.NativeFunctionMissingTypes, 'native/extern function ${node.value} must have a type for parameter ${param.name}');
+                            emitError(param.origin, ErrorType.NativeFunctionMissingTypes, 'native/extern function ${funcName} must have a type for parameter ${param.name}');
                         }
                     }
                 }
+
+                var func = node.parent.analysisScope.getFunction(funcName);
 
                 if (body != null) { // body is deferred, so we have to run it here
                     runAtNode(body, scope);
                 }
 
-                if (externBody != null ) {
-                    var func = node.parent.analysisScope.getFunction(node.value);
+                if (externBody != null) {
                     func.isExtern = true;
                     func.remapTo = externBody.value;
 

@@ -1,5 +1,7 @@
 need "math"
+need "io"
 
 func main() {
-    return abs(-5);
+    println("Hello World!")
+    return -abs(-5);
 }

@@ -102,21 +102,22 @@ class AnalyserScope {
         }
     }
 
-    public function defineFunction(name: String, type: AnalyserType, params: Array<AnalyserFunctionParam>, origin: Node): Void {
+    public function defineFunction(name: String, type: AnalyserType, params: Array<AnalyserFunctionParam>, origin: Node, remapTo: Null<String> = null): Void {
         if (_funcLookup.exists(name)) {
             var fn = _funcLookup.get(name);
             if (!fn.defined) {
                 fn.params = params;
                 fn.origin = origin;
                 fn.defined = true;
+                fn.remapTo = remapTo;
                 _analyser.addTypeConstraint(origin, type, fn.type, AnalyserConstraintPriority.INFERENCE);
+
+                for (child in _children) {
+                    child.defineFunction(name, type, params, origin, remapTo);
+                }
 
                 for (usage in fn.usages) {
                     _analyser.createNodeConstraintsAndVerify(usage, usage.analysisScope);
-                }
-
-                for (child in _children) {
-                    child.defineFunction(name, type, params, origin);
                 }
 
                 fn.usages = [];
@@ -129,14 +130,15 @@ class AnalyserScope {
             params: params,
             origin: origin,
             usages: [],
-            defined: true
+            defined: true,
+            remapTo: remapTo
         };
 
         _functions.push(func);
         _funcLookup.set(name, func);
 
         for (child in _children) {
-            child.defineFunction(name, type, params, origin);
+            child.defineFunction(name, type, params, origin, remapTo);
         }
     }
 

@@ -12,6 +12,7 @@ enum NodeType {
     FunctionDeclBody;
     FunctionDeclNativeBody;
     FunctionDeclExternBody;
+    FunctionDeclNoRemap;
     FunctionDeclExternHeader;
     FunctionCall;
     FunctionCallParam;

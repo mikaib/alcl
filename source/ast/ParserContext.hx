@@ -319,8 +319,15 @@ class ParserContext {
             funcBodyCtx.parse();
         }
 
-        // end
+        // pos
         extractPosFromChildren(funcNode);
+
+        if (_meta.exists('no_remap') || funcName.value == "main") {
+            var noRemapTag = createNode(NodeType.FunctionDeclNoRemap, token, token, funcNode);
+            funcNode.children.push(noRemapTag);
+        }
+
+        // end
         addNode(funcNode);
     }
 

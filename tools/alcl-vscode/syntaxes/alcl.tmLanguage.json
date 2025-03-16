@@ -35,7 +35,7 @@
       "patterns": [
         {
           "name": "storage.modifier.metadata.alcl",
-          "match": "#(?:native_header|native_function|ctype|inject_c|assert_type|log_type|extern)"
+          "match": "#(?:native_header|native_function|ctype|inject_c|assert_type|log_type|extern|no_remap)"
         },
         {
           "name": "keyword.import.alcl",
