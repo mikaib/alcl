@@ -23,11 +23,6 @@ class CMakeInterface extends CBuild {
 
         cmakeContent.add("add_executable(ALCLOutput " + output + " ");
 
-        // TODO: temp fix for libmath on linux, should add a build system to ALCL
-        if (platform == CBuildPlatform.Linux) {
-            cmakeContent.add("target_link_libraries(ALCLOutput m)\n");
-        }
-
         var uniqueDirs: Array<String> = [];
         for (file in files) {
             var dir = Path.directory(file);
@@ -40,8 +35,13 @@ class CMakeInterface extends CBuild {
 
         cmakeContent.add(")\n");
 
+        // TODO: temp fix for libmath on linux, should add a build system to ALCL
+        if (platform == CBuildPlatform.Linux) {
+            cmakeContent.add("target_link_libraries(ALCLOutput m)\n");
+        }
+
         for (dir in uniqueDirs) {
-            cmakeContent.add("include_directories(./" + dir + ")\n");
+            cmakeContent.add("target_include_directories(ALCLOutput ./" + dir + ")\n");
         }
 
         var buildDir = _project.getOutputDirectory() + "/build";
