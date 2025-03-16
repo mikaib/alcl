@@ -21,7 +21,7 @@ class CMakeInterface extends CBuild {
         cmakeContent.add("cmake_minimum_required(VERSION 3.10)\n");
         cmakeContent.add("project(ALCLOutput)\n");
 
-        cmakeContent.add("add_executable(" + output + " ");
+        cmakeContent.add("add_executable(ALCLOutput " + output + " ");
 
         // TODO: temp fix for libmath on linux, should add a build system to ALCL
         if (platform == CBuildPlatform.Linux) {
