@@ -22,6 +22,11 @@ class CMakeInterface extends CBuild {
         cmakeContent.add("project(ALCLOutput)\n");
         cmakeContent.add("add_executable(" + output + " ");
 
+        // TODO: add a build system to ALCL
+        if (platform == CBuildPlatform.Linux) {
+            cmakeContent.add("-lm ");
+        }
+
         var uniqueDirs: Array<String> = [];
         for (file in files) {
             var dir = Path.directory(file);
