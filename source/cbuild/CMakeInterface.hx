@@ -26,7 +26,6 @@ class CMakeInterface extends CBuild {
             cmakeContent.add("target_link_libraries(ALCLOutput m)\n");
         }
 
-
         cmakeContent.add("add_executable(" + output + " ");
 
         var uniqueDirs: Array<String> = [];
