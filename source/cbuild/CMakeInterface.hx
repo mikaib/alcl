@@ -20,12 +20,14 @@ class CMakeInterface extends CBuild {
         var cmakeContent = new StringBuf();
         cmakeContent.add("cmake_minimum_required(VERSION 3.10)\n");
         cmakeContent.add("project(ALCLOutput)\n");
-        cmakeContent.add("add_executable(" + output + " ");
 
-        // TODO: add a build system to ALCL
+        // TODO: temp fix for libmath on linux, should add a build system to ALCL
         if (platform == CBuildPlatform.Linux) {
-            cmakeContent.add("-lm ");
+            cmakeContent.add("target_link_libraries(ALCLOutput m)\n");
         }
+
+
+        cmakeContent.add("add_executable(" + output + " ");
 
         var uniqueDirs: Array<String> = [];
         for (file in files) {
