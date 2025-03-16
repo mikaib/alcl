@@ -41,7 +41,7 @@ class CMakeInterface extends CBuild {
         }
 
         for (dir in uniqueDirs) {
-            cmakeContent.add("target_include_directories(ALCLOutput ./" + dir + ")\n");
+            cmakeContent.add("target_include_directories(ALCLOutput PRIVATE ./" + dir + ")\n");
         }
 
         var buildDir = _project.getOutputDirectory() + "/build";
