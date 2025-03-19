@@ -8,6 +8,7 @@
     { "include": "#keywords" },
     { "include": "#strings" },
     { "include": "#functions" },
+    { "include": "#function-calls" },
     { "include": "#variables" },
     { "include": "#operators" },
     { "include": "#identifiers" },
@@ -48,20 +49,15 @@
     },
     "variable-declaration": {
       "patterns": [
-      {
-        "begin": "\\b(var)\\b(\\s+)([A-Za-z_][A-Za-z0-9_]*)\\s*:\\s*",
-        "beginCaptures": {
-        "1": { "name": "keyword.control.alcl" },
-        "3": { "name": "variable.other.local.alcl" }
-        },
-        "end": "(?=\\s*(=|;|$))",
-        "patterns": [
         {
-          "name": "support.class.builtin.alcl support.package.alcl entity.name.type.alcl",
-          "match": "(?<=\\b(var)\\b\\s+)(?:\\[[A-Za-z0-9]+\\])?[A-Za-z0-9]+"
+          "name": "meta.variable.declaration.alcl",
+          "match": "\\b(var)\\s+([a-zA-Z_][a-zA-Z0-9_]*)(?::\\s*([a-zA-Z_][a-zA-Z0-9_]*))?",
+          "captures": {
+            "1": { "name": "keyword.control.alcl" },
+            "2": { "name": "variable.other.alcl" },
+            "3": { "name": "entity.name.class.alcl" }
+          }
         }
-        ]
-      }
       ]
     },
     "strings": {
@@ -75,20 +71,55 @@
         }
       ]
     },
-    "functions": {
+    "function-calls": {
       "patterns": [
         {
-          "name": "storage.type.function.alcl",
-          "match": "\\bfunc\\b"
-        },
-        {
-          "name": "entity.name.function.alcl",
-          "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()"
-        },
-        {
-          "name": "variable.parameter.alcl",
-          "match": "\\bfunc\\s+[a-zA-Z_][a-zA-Z0-9_]*\\s*\\([^\\)]*\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(:|,|\\))"
+          "name": "meta.function-call.alcl",
+          "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(",
+          "captures": {
+            "1": { "name": "entity.name.function.alcl" }
+          }
         }
+      ]
+    },
+    "functions": {
+      "patterns": [
+      {
+      "name": "meta.function.declaration.alcl",
+      "begin": "\\b(func)\\s+([a-zA-Z_][a-zA-Z0-9_]*)",
+      "beginCaptures": {
+      "1": { "name": "keyword.control.alcl" },
+      "2": { "name": "entity.name.function.alcl" }
+      },
+      "end": "\\{|$",
+      "patterns": [
+      {
+        "name": "meta.function.parameters.alcl",
+        "begin": "\\(",
+        "end": "\\)",
+        "patterns": [
+        {
+        "match": "([a-zA-Z_][a-zA-Z0-9_]*)(\\s*:\\s*([a-zA-Z_][a-zA-Z0-9_]*))?",
+        "captures": {
+          "1": { "name": "variable.parameter.alcl" },
+          "3": { "name": "entity.name.class.alcl" }
+        }
+        },
+        {
+        "name": "punctuation.separator.parameter.alcl",
+        "match": ","
+        }
+        ]
+      },
+      {
+        "name": "meta.function.return-type.alcl",
+        "match": ":\\s*([a-zA-Z_][a-zA-Z0-9_]*)",
+        "captures": {
+        "1": { "name": "entity.name.class.alcl" }
+        }
+      }
+      ]
+      }
       ]
     },
     "variables": {

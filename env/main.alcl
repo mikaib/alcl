@@ -3,7 +3,9 @@ need "io"
 
 class Vehicle extends Test {
     var brand: CString;
-    var model: CString;
+    var model: Int32;
+    var model: Test = true;
+    var test = 1.0;
 
     func Vehicle(brand: CString, model: CString) {
         $brand = brand;
@@ -23,6 +25,8 @@ class Vehicle extends Test {
         println("Vehicle is going");
     }
 }
+
+func test() {}
 
 class Car extends Vehicle {
     var year: Int32;
