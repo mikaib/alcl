@@ -151,6 +151,8 @@ class Printer {
                 out += node.value;
             case NodeType.ForLoopBody:
                 out += printChildren(node);
+            case NodeType.ClassDecl:
+                out += printClassDecl(node, indent);
             case NodeType.CCode:
                 out += node.value + (inlineNode ? "" : "\n");
             case NodeType.Cast:
@@ -416,4 +418,54 @@ class Printer {
         return 'while (${printChildren(condition)}) {\n${replaceLast(printNode(body, indent + 1), "\n", "")}\n}\n';
     }
 
+    public function printClassDecl(node: Node, indent: Int): String {
+        var tdef: String = 'typedef struct alcl__class_${node.value} alcl__class_${node.value};\n';
+        tdef += 'typedef struct alcl__vtable_${node.value} alcl__vtable_${node.value};\n';
+
+        var ptr: String = 'typedef struct alcl__classptr_${node.value} {\n';
+        ptr += '    alcl__class_${node.value} *this;\n';
+        ptr += '    const alcl__vtable_${node.value} *vtable;\n';
+        ptr += '} alcl__classptr_${node.value};\n';
+
+        var vtable: String = 'struct alcl__vtable_${node.value} {\n';
+        var body = findChildOfType(node, NodeType.ClassBody);
+        var funcs = findAllChildrenOfType(body, NodeType.FunctionDecl);
+        var vars = findAllChildrenOfType(body, NodeType.VarDef);
+
+        for (func in funcs) {
+            vtable += '    ${_types.convertTypeAlclToC(func.analysisType.toString())} (*${func.value})(alcl__classptr_${node.value} *this';
+            var params = findAllChildrenOfType(func, NodeType.FunctionDeclParam);
+            for (param in params) {
+                vtable += ', ${_types.convertTypeAlclToC(param.analysisType.toString())} ${param.value}';
+            }
+            vtable += ');\n';
+        }
+        vtable += '};\n';
+
+        var classDef: String = 'struct alcl__class_${node.value} {\n';
+        for (v in vars) {
+            classDef += '    ${_types.convertTypeAlclToC(v.analysisType.toString())} ${v.value};\n';
+        }
+        classDef += '};\n';
+
+        var classCode = "";
+        for (func in funcs) {
+            classCode += printFunctionDecl(func, indent);
+        }
+
+        var vTableImpl = 'static const alcl__vtable_${node.value} alcl__vtable_${node.value}_impl = {\n';
+        var hasFuncs = false;
+        for (func in funcs) {
+            hasFuncs = true;
+            vTableImpl += '    .${func.value} = ${func.value},\n';
+        }
+
+        if (hasFuncs) {
+            vTableImpl = vTableImpl.substr(0, vTableImpl.length - 2);
+        }
+
+        vTableImpl += '\n};\n';
+
+        return tdef + '\n' + ptr + '\n' + classDef + '\n' + classCode + vtable + '\n' + vTableImpl;
+    }
 }

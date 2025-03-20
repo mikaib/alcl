@@ -436,7 +436,7 @@ class ProjectData {
                 libAnalysers.push(dependencyAnalyser);
             }
             analyser.run(libAnalysers);
-            // analyser.getParser().print();
+            analyser.getParser().print();
         }
 
         // log errors

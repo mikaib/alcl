@@ -685,8 +685,42 @@ class ParserContext {
         addNode(elseNode);
     }
 
+    public function parseClass(token: Token): Void {
+        if (!hasNextOfType(TokenType.Identifier)) return;
+        var className: Token = next();
+        var classNode = createNode(NodeType.ClassDecl, token, null, null, className.value);
+
+        if (hasNextOfType(TokenType.Identifier) && peekNext().value == "extends") {
+            next();
+            if (!hasNextOfType(TokenType.Identifier)) return;
+
+            var parentName: Token = next();
+            var parentNameNode = createNode(NodeType.ClassExtends, parentName, parentName, classNode, parentName.value);
+            classNode.children.push(parentNameNode);
+        }
+
+        if (hasNextOfType(TokenType.LeftBrace)) {
+            var bodyTokens: Array<Token> = getTokenArrayDelim(TokenType.LeftBrace, TokenType.RightBrace);
+            var bodyNode = createNode(
+                NodeType.ClassBody,
+                bodyTokens[0],
+                bodyTokens[bodyTokens.length - 1],
+                classNode
+            );
+
+            classNode.children.push(bodyNode);
+
+            var bodyCtx: ParserContext = new ParserContext(bodyTokens, _parser, bodyNode);
+            bodyCtx.parse();
+        }
+
+        addNode(classNode);
+    }
+
     public function parseIdentifier(token: Token): Void {
         switch (token.value) {
+            case "class":
+                parseClass(token);
             case "func":
                 parseFunction(token);
             case "need":

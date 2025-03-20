@@ -141,6 +141,10 @@ class Analyser {
 
     public function createNodeConstraintsAndVerify(node: Node, scope: AnalyserScope): Void {
         switch (node.type) {
+            case NodeType.ClassDecl:
+                _parser.getTypes().addAlclToCTypeMapping(node.value, '__alcl_class_${node.value}');
+                mustHaveBetweenChildrenAmount(node, 1, 2);
+
             case NodeType.FunctionCall:
                 var func = scope.getFunction(node.value);
                 if (func == null) {
@@ -206,6 +210,10 @@ class Analyser {
 
                 if (externBody == null && noRemapTag == null && !_project.hasDefine('no_remap')) {
                     node.value = '__alcl_${funcName}';
+                }
+
+                if (node.parent.type == NodeType.ClassBody && !_project.hasDefine('no_remap')) {
+                    node.value = '__alcl_method_${node.parent.parent.value}_${funcName}';
                 }
 
                 node.parent.analysisScope.defineFunction(funcName, node.analysisType, fParams, node, node.value);
@@ -385,7 +393,7 @@ class Analyser {
                 copyTypeFromFirstChild(node);
                 addTypeConstraint(node, TBool, node.analysisType, INFERENCE);
 
-            case NodeType.Root | NodeType.CCode | NodeType.ForLoopBody | NodeType.WhileLoopBody | NodeType.IfStatementBody | NodeType.FunctionDeclNativeBody | NodeType.FunctionDeclBody:
+            case NodeType.Root | NodeType.CCode | NodeType.ForLoopBody | NodeType.WhileLoopBody | NodeType.IfStatementBody | NodeType.FunctionDeclNativeBody | NodeType.FunctionDeclBody | NodeType.ClassBody:
                 return;
 
             default:

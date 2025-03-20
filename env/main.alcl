@@ -1,55 +1,55 @@
-need "math"
 need "io"
 
-class Vehicle extends Test {
-    var brand: CString;
-    var model: Int32;
-    var model: Test = true;
-    var test = 1.0;
+class Test {
+    var hi: CString;
 
-    func Vehicle(brand: CString, model: CString) {
-        $brand = brand;
-        $model = model;
-        test = a ? b : c
+    func Test(): Void {
+        println("new");
     }
 
-    func getBrand(): CString {
-        return $brand;
-    }
-
-    func getModel(): CString {
-        return $model;
-    }
-
-    func go(): Void {
-        println("Vehicle is going");
+    func hello(name: CString): Void {
+        println("hello");
+        println(name);
     }
 }
 
-func test() {}
-
-class Car extends Vehicle {
-    var year: Int32;
-    var year;
-    var q: Int32 = 0;
-    var test: Int32 = 0;
-    var cool: Bool = true;
-
-    func Car(brand: CString, model: CString, year: Int32) {
-        super(brand, model);
-        $year = year;
-    }
-
-    func getYear(): Int {
-        return $year;
-    }
-
-    override func go(): Void {
-        println("Car go vroooom!")
-    }
-}
-
-func main() {
-    println("Hello World!")
-    return -abs(-5);
-}
+// need "io"
+//
+// class Vehicle extends Test {
+//     var brand: CString;
+//     var model: Int32;
+//
+//     func Vehicle(brand: CString, model: CString) {
+//         $brand = brand;
+//         $model = model;
+//     }
+//
+//     func getBrand(): CString {
+//         return $brand;
+//     }
+//
+//     func getModel(): CString {
+//         return $model;
+//     }
+//
+//     func start(): Void {
+//         println("Vehicle is going");
+//     }
+// }
+//
+// class Car extends Vehicle {
+//     var year: Int32;
+//
+//     func Car(brand: CString, model: CString, year: Int32) {
+//         super(brand, model);
+//         $year = year;
+//     }
+//
+//     func getYear(): Int {
+//         return $year;
+//     }
+//
+//     override func start(): Void {
+//         println("Car go vroooom!");
+//     }
+// }

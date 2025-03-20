@@ -50,5 +50,8 @@ enum NodeType {
     OperationLeft;
     OperationRight;
     SubExpression;
+    ClassDecl;
+    ClassBody;
+    ClassExtends;
     Return;
 }
