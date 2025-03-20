@@ -849,7 +849,7 @@ class ParserContext {
                 @:privateAccess _parser._wantGlobalLib = false;
             case "inject_c":
                 var first = tokenizer.tokens.shift();
-                var last = tokenizer.tokens.pop();
+                var last = tokenizer.tokens.pop() ?? first;
                 var firstIdx = first.index;
                 var lastIdx = last.index + last.value.length;
 

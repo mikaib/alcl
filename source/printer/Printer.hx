@@ -16,6 +16,7 @@ class Printer {
     private var _project: ProjectData;
     private var _baseLocDir: String;
     private var _funcDefs: Array<String> = [];
+    private var _classDefs: Array<String> = [];
 
     public function new(parser: Parser, project: ProjectData, baseLocDir: String = "") {
         _root = parser.getRoot();
@@ -79,11 +80,19 @@ class Printer {
         var code = "";
         var childrenStr = printChildren(_root);
 
+        for (classDef in _classDefs) {
+            code += classDef;
+        }
+
+        if (_classDefs.length > 0) code += "\n";
+
         for (funcDef in _funcDefs) {
             code += funcDef;
         }
 
-        code += "\n" + childrenStr;
+        if (_funcDefs.length > 0) code += "\n";
+
+        code += childrenStr;
         var res = headers + "\n" + code;
 
         return res;
@@ -419,30 +428,32 @@ class Printer {
     }
 
     public function printClassDecl(node: Node, indent: Int): String {
-        var tdef: String = 'typedef struct alcl__class_${node.value} alcl__class_${node.value};\n';
-        tdef += 'typedef struct alcl__vtable_${node.value} alcl__vtable_${node.value};\n';
+        var tdef: String = 'typedef struct __alcl_class_${node.value} __alcl_class_${node.value};\n';
+        tdef += 'typedef struct __alcl_vtable_${node.value} __alcl_vtable_${node.value};\n';
+        tdef += 'typedef struct __alcl_classptr_${node.value} __alcl_classptr_${node.value};\n';
 
-        var ptr: String = 'typedef struct alcl__classptr_${node.value} {\n';
-        ptr += '    alcl__class_${node.value} *this;\n';
-        ptr += '    const alcl__vtable_${node.value} *vtable;\n';
-        ptr += '} alcl__classptr_${node.value};\n';
+        var ptr: String = 'typedef struct __alcl_classptr_${node.value} {\n';
+        ptr += '    __alcl_class_${node.value} *this;\n';
+        ptr += '    const __alcl_vtable_${node.value} *vtable;\n';
+        ptr += '} __alcl_classptr_${node.value};\n';
 
-        var vtable: String = 'struct alcl__vtable_${node.value} {\n';
+        var vtable: String = 'struct __alcl_vtable_${node.value} {\n';
         var body = findChildOfType(node, NodeType.ClassBody);
         var funcs = findAllChildrenOfType(body, NodeType.FunctionDecl);
         var vars = findAllChildrenOfType(body, NodeType.VarDef);
 
         for (func in funcs) {
-            vtable += '    ${_types.convertTypeAlclToC(func.analysisType.toString())} (*${func.value})(alcl__classptr_${node.value} *this';
+            vtable += '    ${_types.convertTypeAlclToC(func.analysisType.toString())} (*${func.value})(';
             var params = findAllChildrenOfType(func, NodeType.FunctionDeclParam);
             for (param in params) {
-                vtable += ', ${_types.convertTypeAlclToC(param.analysisType.toString())} ${param.value}';
+                vtable += '${_types.convertTypeAlclToC(param.analysisType.toString())} ${param.value}, ';
             }
+            vtable = vtable.substr(0, vtable.length - 2);
             vtable += ');\n';
         }
         vtable += '};\n';
 
-        var classDef: String = 'struct alcl__class_${node.value} {\n';
+        var classDef: String = 'struct __alcl_class_${node.value} {\n';
         for (v in vars) {
             classDef += '    ${_types.convertTypeAlclToC(v.analysisType.toString())} ${v.value};\n';
         }
@@ -453,7 +464,17 @@ class Printer {
             classCode += printFunctionDecl(func, indent);
         }
 
-        var vTableImpl = 'static const alcl__vtable_${node.value} alcl__vtable_${node.value}_impl = {\n';
+        classCode += '__alcl_classptr_${node.value} *${node.value}_new() {\n';
+        classCode += '    __alcl_class_${node.value} *obj = alcl_gc_alloc(sizeof(__alcl_class_${node.value}));\n';
+        classCode += '    __alcl_classptr_${node.value} *ptr = alcl_gc_alloc(sizeof(__alcl_classptr_${node.value}));\n';
+        classCode += '    ptr->this = obj;\n';
+        classCode += '    ptr->vtable = &__alcl_vtable_${node.value}_impl;\n';
+        classCode += '    return ptr;\n';
+        classCode += '}\n';
+
+        _funcDefs.push('__alcl_classptr_${node.value} *${node.value}_new();\n');
+
+        var vTableImpl = 'static const __alcl_vtable_${node.value} __alcl_vtable_${node.value}_impl = {\n';
         var hasFuncs = false;
         for (func in funcs) {
             hasFuncs = true;
@@ -465,7 +486,8 @@ class Printer {
         }
 
         vTableImpl += '\n};\n';
+        _classDefs.push(tdef);
 
-        return tdef + '\n' + ptr + '\n' + classDef + '\n' + classCode + vtable + '\n' + vTableImpl;
+        return ptr + '\n' + classDef + '\n' + vtable + '\n' + vTableImpl + '\n' + classCode + '\n';
     }
 }

@@ -142,7 +142,7 @@ class Analyser {
     public function createNodeConstraintsAndVerify(node: Node, scope: AnalyserScope): Void {
         switch (node.type) {
             case NodeType.ClassDecl:
-                _parser.getTypes().addAlclToCTypeMapping(node.value, '__alcl_class_${node.value}');
+                _parser.getTypes().addAlclToCTypeMapping(node.value, '__alcl_class_${node.value}*');
                 mustHaveBetweenChildrenAmount(node, 1, 2);
 
             case NodeType.FunctionCall:
@@ -174,10 +174,23 @@ class Analyser {
                 }
 
             case NodeType.FunctionDecl:
+                if (node.parent.type == NodeType.ClassBody) {
+                    var thisNode: Node = createNode(NodeType.FunctionDeclParam, node, null, null, 'this');
+                    var thisTypeNode: Node = createNode(NodeType.FunctionDeclParamType, thisNode, null, null, node.parent.parent.value);
+                    thisNode.children.push(thisTypeNode);
+                    thisNode.analysisScope = node.analysisScope;
+                    thisNode.analysisType = AnalyserType.createUnknownType();
+
+                    thisTypeNode.analysisType = AnalyserType.createUnknownType();
+                    thisTypeNode.analysisScope = node.analysisScope;
+
+                    node.children.unshift(thisNode);
+                }
+
                 var returnType = findChildOfType(node, NodeType.FunctionDeclReturnType);
                 var params = findAllChildrenOfType(node, NodeType.FunctionDeclParam);
-
                 var fParams: Array<AnalyserFunctionParam> = [];
+
                 for (param in params) {
                     var paramType = findChildOfType(param, NodeType.FunctionDeclParamType);
                     if (paramType != null) {
