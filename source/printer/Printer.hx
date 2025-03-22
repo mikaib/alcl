@@ -166,6 +166,10 @@ class Printer {
                 out += node.value + (inlineNode ? "" : "\n");
             case NodeType.Cast:
                 out += '(${_types.convertTypeAlclToC(node.value)})(${printChildren(node, true)})';
+            case NodeType.FromPtr:
+                out += '*(${printChildren(node, true)})';
+            case NodeType.ToPtr:
+                out += '&(${printChildren(node, true)})';
             default:
         }
 
@@ -464,11 +468,54 @@ class Printer {
             classCode += printFunctionDecl(func, indent);
         }
 
-        classCode += '__alcl_classptr_${node.value} *${node.value}_new() {\n';
+        var hasConstructor = false;
+        for (func in funcs) {
+            if (func.value == '__alcl_method_${node.value}_${node.value}') {
+                hasConstructor = true;
+                break;
+            }
+        }
+
+        var constructorParams = "";
+        var callParams = "";
+        if (hasConstructor) {
+            var constructor = findChildOfType(body, NodeType.FunctionDecl);
+            var params = findAllChildrenOfType(constructor, NodeType.FunctionDeclParam);
+            for (param in params) {
+                if (param.value == 'this') {
+                    continue;
+                }
+
+                constructorParams += '${_types.convertTypeAlclToC(param.analysisType.toString())} ${param.value}, ';
+                callParams += '${param.value}, ';
+            }
+            constructorParams = constructorParams.substr(0, constructorParams.length - 2);
+        }
+
+        if (hasConstructor) {
+            classCode += '__alcl_classptr_${node.value} *${node.value}_new(${constructorParams}) {\n';
+        } else {
+            classCode += '__alcl_classptr_${node.value} *${node.value}_new() {\n';
+        }
+
         classCode += '    __alcl_class_${node.value} *obj = alcl_gc_alloc(sizeof(__alcl_class_${node.value}));\n';
         classCode += '    __alcl_classptr_${node.value} *ptr = alcl_gc_alloc(sizeof(__alcl_classptr_${node.value}));\n';
         classCode += '    ptr->this = obj;\n';
+
+        if (vars.length > 0) {
+            for (v in vars) {
+                classCode += '    ptr->this->${v.value} = 0;\n';
+            }
+        }
+
         classCode += '    ptr->vtable = &__alcl_vtable_${node.value}_impl;\n';
+
+        if (hasConstructor) {
+            trace(callParams);
+            var paramStr = 'ptr->this, ${callParams}';
+            classCode += '    __alcl_method_${node.value}_${node.value}(${paramStr.substr(0, paramStr.length - 2)});\n';
+        }
+
         classCode += '    return ptr;\n';
         classCode += '}\n';
 

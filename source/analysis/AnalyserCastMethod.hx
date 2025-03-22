@@ -6,6 +6,8 @@ class AnalyserCastMethod {
     private var _to: AnalyserType;
     private var _function: AnalyserFunction = null;
     private var _usingCast: Bool = false;
+    private var _usingToPtr: Bool = false;
+    private var _usingFromPtr: Bool = false;
     private var _usingFunction: Bool = false;
     private var _isImplicit: Bool = false;
 
@@ -28,6 +30,24 @@ class AnalyserCastMethod {
         }
     }
 
+    public static function usingFromPtr(from: AnalyserType, to: AnalyserType, isImplicit: Bool = false): AnalyserCastMethod {
+        return {
+            _from: from,
+            _to: to,
+            _usingFromPtr: true,
+            _isImplicit: isImplicit
+        }
+    }
+
+    public static function usingToPtr(from: AnalyserType, to: AnalyserType, isImplicit: Bool = false): AnalyserCastMethod {
+        return {
+            _from: from,
+            _to: to,
+            _usingToPtr: true,
+            _isImplicit: isImplicit
+        }
+    }
+
     public function getFrom(): AnalyserType {
         return _from;
     }
@@ -46,6 +66,14 @@ class AnalyserCastMethod {
 
     public function isUsingFunction(): Bool {
         return _usingFunction;
+    }
+
+    public function isUsingFromPtr(): Bool {
+        return _usingFromPtr;
+    }
+
+    public function isUsingToPtr(): Bool {
+        return _usingToPtr;
     }
 
     public function isImplicit(): Bool {

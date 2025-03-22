@@ -15,21 +15,17 @@ class AnalyserSolver {
         _constraints.push(constraint);
     }
 
-    public function solve(): Bool {
+    public function solveWith(constraints: Array<AnalyserConstraint>): Void {
         var changed: Bool = true;
-        var constraints: Array<AnalyserConstraint> = _constraints.copy();
         var toRemove: Array<AnalyserConstraint> = [];
 
         while (changed) {
-            // trace('SOLVE:');
             changed = false;
             constraints.sort((a, b) -> {
                 return b.priority - a.priority;
             });
 
             for (constraint in constraints) {
-                // trace('    ' + constraint.toString());
-
                 if (constraint.solve(this)) {
                     toRemove.push(constraint);
                 }
@@ -42,12 +38,40 @@ class AnalyserSolver {
 
             toRemove.resize(0);
         }
+    }
 
+    public function solve(): Bool {
+        var constraints: Array<AnalyserConstraint> = _constraints.copy();
+
+        // Pass 1: Solve all constraints that can be solved immediately
+        solveWith(constraints);
+        if (constraints.length <= 0) {
+            return true;
+        }
+
+        // Pass 2: Try to cast any remaining constraints
+        var _toRemove: Array<AnalyserConstraint> = [];
+        for (constraint in constraints) {
+            var solved: Bool = constraint.tryCast(this);
+            if (solved) {
+                _toRemove.push(constraint);
+            }
+        }
+
+        for (constraint in _toRemove) {
+            constraints.remove(constraint);
+        }
+
+        if (constraints.length <= 0) {
+            return true;
+        }
+
+        // Failure!
         for (constraint in constraints) {
             constraint.fail(this);
         }
 
-        return constraints.length <= 0;
+        return false;
     }
 
 }

@@ -1,4 +1,5 @@
 package typer;
+using StringTools;
 
 class Typer {
 
@@ -10,6 +11,10 @@ class Typer {
     }
 
     public function convertTypeAlclToC(type: String): String {
+        if (type.startsWith('Pointer<')) {
+            var innerType = type.substring(8, type.length - 1);
+            return '${convertTypeAlclToC(innerType)}*';
+        }
         return _types.get(type);
     }
 

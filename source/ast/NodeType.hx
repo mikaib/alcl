@@ -5,6 +5,8 @@ enum NodeType {
     Root;
     CCode;
     Cast;
+    ToPtr;
+    FromPtr;
     FunctionDecl;
     FunctionDeclParam;
     FunctionDeclParamType;

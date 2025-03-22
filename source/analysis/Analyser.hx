@@ -17,8 +17,11 @@ class Analyser {
     private var _file: String;
     private var _mainScope: AnalyserScope;
     private var _project: ProjectData;
+    private var _toRemapDecls: Array<AnalyserFunction> = [];
+    private var _toRemapCalls: Array<{ node: Node, func: AnalyserFunction }> = [];
 
     private var _compareOps: Array<String> = ["||", "&&", "|", "^", "&", "==", "!=", "<", "<=", ">", ">=", "!", "~"];
+    private var TCSizeT: AnalyserFixedType = AnalyserType.createFixedType("CSizeT");
     private var TInt32: AnalyserFixedType = AnalyserType.createFixedType("Int32");
     private var TInt64: AnalyserFixedType = AnalyserType.createFixedType("Int64");
     private var TFloat32: AnalyserFixedType = AnalyserType.createFixedType("Float32");
@@ -142,7 +145,7 @@ class Analyser {
     public function createNodeConstraintsAndVerify(node: Node, scope: AnalyserScope): Void {
         switch (node.type) {
             case NodeType.ClassDecl:
-                _parser.getTypes().addAlclToCTypeMapping(node.value, '__alcl_class_${node.value}*');
+                _parser.getTypes().addAlclToCTypeMapping(node.value, '__alcl_classptr_${node.value}*');
                 mustHaveBetweenChildrenAmount(node, 1, 2);
 
             case NodeType.FunctionCall:
@@ -155,7 +158,7 @@ class Analyser {
                         emitError(node, ErrorType.ArgumentCountMismatch, 'function ${func.name} expected ${func.params.length} arguments, got ${params.length}');
                     } else {
                         for (i in 0...params.length) {
-                            addTypeConstraint(node, func.params[i].type, params[i].analysisType, INFERENCE_USAGE);
+                            addTypeConstraint(params[i].children[0], func.params[i].type, params[i].analysisType, INFERENCE_USAGE);
                         }
                     }
 
@@ -167,7 +170,10 @@ class Analyser {
                     }
 
                     if (func.remapTo != null) {
-                        node.value = func.remapTo;
+                        _toRemapCalls.push({
+                            node: node,
+                            func: func
+                        });
                     }
 
                     addTypeConstraint(node, node.analysisType, func.type, INFERENCE);
@@ -216,17 +222,18 @@ class Analyser {
                 }
 
                 var funcName = node.value;
+                var remapTo = node.value;
                 var nativeBody = findChildOfType(node, NodeType.FunctionDeclNativeBody);
                 var externBody = findChildOfType(node, NodeType.FunctionDeclExternBody);
                 var noRemapTag = findChildOfType(node, NodeType.FunctionDeclNoRemap);
                 var body = findChildOfType(node, NodeType.FunctionDeclBody);
 
                 if (externBody == null && noRemapTag == null && !_project.hasDefine('no_remap')) {
-                    node.value = '__alcl_${funcName}';
+                    remapTo = '__alcl_${funcName}';
                 }
 
                 if (node.parent.type == NodeType.ClassBody && !_project.hasDefine('no_remap')) {
-                    node.value = '__alcl_method_${node.parent.parent.value}_${funcName}';
+                    remapTo = '__alcl_method_${node.parent.parent.value}_${funcName}';
                 }
 
                 node.parent.analysisScope.defineFunction(funcName, node.analysisType, fParams, node, node.value);
@@ -247,10 +254,6 @@ class Analyser {
 
                 var func = node.parent.analysisScope.getFunction(funcName);
 
-                if (body != null) { // body is deferred, so we have to run it here
-                    runAtNode(body, scope);
-                }
-
                 if (externBody != null) {
                     func.isExtern = true;
                     func.remapTo = externBody.value;
@@ -259,14 +262,22 @@ class Analyser {
                     for (header in headers) {
                         func.headers.push(header.value);
                     }
+                } else {
+                    func.remapTo = remapTo;
+                }
+
+                _toRemapDecls.push(func);
+
+                if (body != null) { // body is deferred, so we have to run it here
+                    runAtNode(body, scope);
                 }
 
             case NodeType.Ternary:
                 var ternaryTrue = findChildOfType(node, NodeType.TernaryTrue);
                 var ternaryFalse = findChildOfType(node, NodeType.TernaryFalse);
                 mustHaveExactChildrenAmount(node, 3);
-                addTypeConstraint(node, node.analysisType, ternaryTrue?.analysisType, INFERENCE);
-                addTypeConstraint(node, node.analysisType, ternaryFalse?.analysisType, INFERENCE);
+                addTypeConstraint(ternaryTrue.children[0], node.analysisType, ternaryTrue?.analysisType, INFERENCE);
+                addTypeConstraint(ternaryFalse.children[0], node.analysisType, ternaryFalse?.analysisType, INFERENCE);
 
             case NodeType.VarType | NodeType.FunctionDeclParamType | NodeType.FunctionDeclReturnType:
                 mustHaveExactChildrenAmount(node, 0);
@@ -282,7 +293,7 @@ class Analyser {
                 }
 
                 if (varValue != null) {
-                    addTypeConstraint(node, node.analysisType, varValue.analysisType, INFERENCE);
+                    addTypeConstraint(varValue.children[0], node.analysisType, varValue.analysisType, INFERENCE);
                 }
 
                 if (scope.getVariable(node.value) != null) {
@@ -296,12 +307,12 @@ class Analyser {
                 var varValue = findChildOfType(node, NodeType.VarValue);
                 var variable = scope.getVariable(node.value);
 
-                addTypeConstraint(node, node.analysisType, varValue?.analysisType, INFERENCE);
+                addTypeConstraint(varValue.children[0], node.analysisType, varValue?.analysisType, INFERENCE);
 
                 if (variable == null) {
                     emitError(node, ErrorType.UndefinedVariable, 'undefined variable ${node.value}');
                 } else {
-                    addTypeConstraint(node, variable.type, varValue?.analysisType, INFERENCE);
+                    addTypeConstraint(varValue.children[0], variable.type, varValue?.analysisType, INFERENCE);
                     variable.isInitialized = true;
                 }
 
@@ -316,7 +327,7 @@ class Analyser {
                         emitError(node, ErrorType.UninitializedVariable, 'uninitialized variable ${node.value}');
                     }
 
-                    addTypeConstraint(node, node.analysisType, variable.type, USER);
+                    addTypeConstraint(node, variable.type, node.analysisType, USER);
                 }
 
             case NodeType.IfStatementElse:
@@ -331,13 +342,13 @@ class Analyser {
                 var left = findChildOfType(node, NodeType.OperationLeft);
                 var right = findChildOfType(node, NodeType.OperationRight);
                 mustHaveExactChildrenAmount(node, 2);
-                addTypeConstraint(node, left?.analysisType, right?.analysisType, INFERENCE); // Ensure we are comparing the same thing
+                addTypeConstraint(right.children[0], left?.analysisType, right?.analysisType, INFERENCE); // Ensure we are comparing the same thing
 
                 if (_compareOps.indexOf(node.value) != -1) {
-                    addTypeConstraint(node, node.analysisType, TBool, INFERENCE);
+                    addTypeConstraint(node, TBool, node.analysisType, INFERENCE);
                 } else {
                     addNumericalTypeConstraint(node, node.analysisType, INFERENCE);
-                    addTypeConstraint(node, node.analysisType, left?.analysisType, INFERENCE);
+                    addTypeConstraint(left.children[0], node.analysisType, left?.analysisType, INFERENCE);
                 }
 
                 addTypeHint(node, TInt32, left?.analysisType);
@@ -351,7 +362,7 @@ class Analyser {
                         addNumericalTypeConstraint(node, node.analysisType, INFERENCE);
                         addTypeHint(node, TInt32, node.analysisType);
                     case '!':
-                        addTypeConstraint(node, TBool, node.analysisType, INFERENCE);
+                        addTypeConstraint(node.children[0], TBool, node.analysisType, INFERENCE);
                     default:
                         emitError(node, ErrorType.SyntaxError, 'unexpected unary operator ${node.value}');
                 }
@@ -362,22 +373,22 @@ class Analyser {
 
             case NodeType.StringLiteral:
                 mustHaveExactChildrenAmount(node, 0);
-                addTypeConstraint(node, node.analysisType, TCString, CONSTANT);
+                addTypeConstraint(node, TCString, node.analysisType, CONSTANT);
 
             case NodeType.BooleanLiteral:
                 mustHaveExactChildrenAmount(node, 0);
-                addTypeConstraint(node, node.analysisType, TBool, CONSTANT);
+                addTypeConstraint(node, TBool, node.analysisType, CONSTANT);
 
             case NodeType.FloatLiteral:
                 mustHaveExactChildrenAmount(node, 0);
-                addTypeConstraint(node, node.analysisType, TFloat64, CONSTANT);
+                addTypeConstraint(node, TFloat64, node.analysisType, CONSTANT);
 
             case NodeType.NullLiteral:
                 mustHaveExactChildrenAmount(node, 0);
 
             case NodeType.IntLiteral:
                 mustHaveExactChildrenAmount(node, 0);
-                addTypeConstraint(node, node.analysisType, TInt32, CONSTANT);
+                addTypeConstraint(node, TInt32, node.analysisType, CONSTANT);
 
             case NodeType.ForLoop:
                 mustHaveExactChildrenAmount(node, 4);
@@ -385,7 +396,7 @@ class Analyser {
             case NodeType.WhileLoop:
                 mustHaveExactChildrenAmount(node, 2);
 
-            case NodeType.OperationLeft | NodeType.OperationRight | NodeType.TernaryTrue | NodeType.TernaryFalse | NodeType.SubExpression | NodeType.ForLoopIter | NodeType.ForLoopInit | NodeType.FunctionCallParam:
+            case NodeType.OperationLeft | NodeType.OperationRight | NodeType.TernaryTrue | NodeType.TernaryFalse | NodeType.SubExpression | NodeType.ForLoopIter | NodeType.ForLoopInit | NodeType.FunctionCallParam | NodeType.VarValue:
                 mustHaveExactChildrenAmount(node, 1);
                 copyTypeFromFirstChild(node);
 
@@ -393,7 +404,7 @@ class Analyser {
                 mustHaveExactChildrenAmount(node, 1);
                 copyTypeFromFirstChild(node);
                 errorIfNull(node, scope.getCurrentFunctionNode(), ErrorType.ReturnOutsideFunction, 'return statement outside function');
-                addTypeConstraint(node, scope.getCurrentFunctionNode()?.analysisType, node.analysisType, INFERENCE);
+                addTypeConstraint(node.children[0], scope.getCurrentFunctionNode()?.analysisType, node.analysisType, INFERENCE);
 
             case NodeType.LoopContinue | NodeType.LoopBreak:
                 mustHaveExactChildrenAmount(node, 0);
@@ -404,14 +415,14 @@ class Analyser {
             case NodeType.TernaryCond | NodeType.IfStatementCond | NodeType.WhileLoopCond | NodeType.ForLoopCond:
                 mustHaveExactChildrenAmount(node, 1);
                 copyTypeFromFirstChild(node);
-                addTypeConstraint(node, TBool, node.analysisType, INFERENCE);
+                addTypeConstraint(node.children[0], TBool, node.analysisType, INFERENCE);
 
             case NodeType.Root | NodeType.CCode | NodeType.ForLoopBody | NodeType.WhileLoopBody | NodeType.IfStatementBody | NodeType.FunctionDeclNativeBody | NodeType.FunctionDeclBody | NodeType.ClassBody:
                 return;
 
             default:
                 if (node.children.length == 1) {
-                    addTypeConstraint(node, node.analysisType, node.children[0].analysisType, INFERENCE);
+                    addTypeConstraint(node.children[0], node.analysisType, node.children[0].analysisType, INFERENCE);
                 }
         }
     }
@@ -455,7 +466,7 @@ class Analyser {
     }
     public function copyTypeFromFirstChild(node: Node): Void {
         if (node.children.length > 0) {
-            addTypeConstraint(node, node.analysisType, node.children[0].analysisType, INFERENCE);
+            addTypeConstraint(node.children[0], node.analysisType, node.children[0].analysisType, INFERENCE);
         }
     }
 
@@ -492,6 +503,7 @@ class Analyser {
             if (visited.exists(currentType.toString())) continue;
             visited.set(currentType.toString(), true);
 
+            // Direct cast
             for (c in scope.getCastMethods()) {
                 if (c.getFrom().equals(currentType) && (isExplicit || c.isImplicit())) {
                     queue.push({
@@ -500,9 +512,82 @@ class Analyser {
                     });
                 }
             }
+
+            // Pointer<T> -> T
+            if (currentType.isComplexType() && currentType.getBaseTypeStr() == "Pointer" && currentType.getParamCount() > 0) {
+                var innerType = currentType.getParam(0);
+                var innerTypeKey = innerType.toString();
+
+                if (!visited.exists(innerTypeKey)) {
+                    var fromPtrCast = AnalyserCastMethod.usingFromPtr(currentType, innerType, true);
+                    queue.push({
+                        type: innerType,
+                        path: currentPath.concat([fromPtrCast])
+                    });
+                }
+            }
+
+            // T -> Pointer<T>
+            if (to.isComplexType() && to.getBaseTypeStr() == "Pointer" && to.getParamCount() > 0) {
+                var targetInnerType = to.getParam(0);
+
+                if (currentType.equals(targetInnerType)) { // TODO: don't care when explicitly casting? void pointers?
+                    var pointerType = AnalyserType.createType("Pointer");
+                    pointerType.addParam(currentType);
+                    var pointerTypeKey = pointerType.toString();
+
+                    if (!visited.exists(pointerTypeKey)) {
+                        var toPtrCast = AnalyserCastMethod.usingToPtr(currentType, pointerType, true);
+                        queue.push({
+                            type: pointerType,
+                            path: currentPath.concat([toPtrCast])
+                        });
+                    }
+                }
+            }
         }
 
         return [];
+    }
+
+    public function castNode(node: Node, path: Array<AnalyserCastMethod>): Void {
+        for (c in path) {
+            var og = node.deepCopy();
+            node.children = [];
+            node.value = c.getTo().toString();
+            node.analysisType = c.getTo();
+            node.children.push(og);
+
+            if (c.isUsingCast()) node.type = NodeType.Cast;
+            else if (c.isUsingFromPtr()) node.type = NodeType.FromPtr;
+            else if (c.isUsingToPtr()) node.type = NodeType.ToPtr;
+
+            if (nodeIsConstant(og) && node.type == NodeType.ToPtr) {
+                emitError(node, ErrorType.TypeCastError, 'cannot convert literal to pointer');
+            }
+
+            if ((node.type == NodeType.ToPtr || node.type == NodeType.FromPtr) && (og.type != NodeType.Identifier)) {
+                emitError(node, ErrorType.TypeCastError, 'only variables can be cast to/from pointers');
+            }
+
+            og.parent = node;
+
+            for (idx in 0..._toRemapCalls.length) {
+                if (_toRemapCalls[idx].node == node) {
+                    _toRemapCalls[idx].node = og;
+                }
+            }
+        }
+
+    }
+
+    public function nodeIsConstant(node: Node): Bool {
+        switch(node.type) {
+            case NodeType.NullLiteral | NodeType.IntLiteral | NodeType.FloatLiteral | NodeType.StringLiteral | NodeType.BooleanLiteral:
+                return true;
+            default:
+                return false;
+        }
     }
 
     public function isNumericalType(type: AnalyserType): Bool {
@@ -567,6 +652,13 @@ class Analyser {
     public function run(libraries: Array<Analyser>): Void {
         var scope: AnalyserScope = getMainScope();
 
+        // Setup scope
+        scope.addCastMethod(AnalyserCastMethod.usingCast(TInt32, TCSizeT, true));
+        scope.addCastMethod(AnalyserCastMethod.usingCast(TCSizeT, TInt32, true));
+        scope.addCastMethod(AnalyserCastMethod.usingCast(TCSizeT, TInt64, true));
+        scope.addCastMethod(AnalyserCastMethod.usingCast(TCSizeT, TFloat32, true));
+        scope.addCastMethod(AnalyserCastMethod.usingCast(TCSizeT, TFloat64, true));
+
         // Pass 1: Merge library scopes into main scope
         for (lib in libraries) {
             scope.mergeScope(lib.getMainScope());
@@ -593,6 +685,17 @@ class Analyser {
 
         // Pass 4: Solve constraints
         _solver.solve();
+
+        // Pass 5: Remap
+        for (decl in _toRemapDecls) {
+            if (decl.origin.type != NodeType.FunctionDecl) continue;
+            decl.origin.value = decl.remapTo;
+        }
+
+        for (call in _toRemapCalls) {
+            call.node.value = call.func.origin.value;
+        }
+
     }
 
 }

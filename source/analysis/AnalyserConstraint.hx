@@ -6,10 +6,11 @@ import errors.ErrorType;
 @:structInit
 class AnalyserConstraint {
 
-    private var TInt32: AnalyserFixedType = AnalyserType.createFixedType("Int32");
-    private var TInt64: AnalyserFixedType = AnalyserType.createFixedType("Int64");
-    private var TFloat32: AnalyserFixedType = AnalyserType.createFixedType("Float32");
-    private var TFloat64: AnalyserFixedType = AnalyserType.createFixedType("Float64");
+    private final TInt32: AnalyserFixedType = AnalyserType.createFixedType("Int32");
+    private final TInt64: AnalyserFixedType = AnalyserType.createFixedType("Int64");
+    private final TFloat32: AnalyserFixedType = AnalyserType.createFixedType("Float32");
+    private final TFloat64: AnalyserFixedType = AnalyserType.createFixedType("Float64");
+    private final TCSizeT: AnalyserFixedType = AnalyserType.createFixedType("CSizeT");
 
     public var a: AnalyserType = null;
     public var b: AnalyserType = null;
@@ -19,17 +20,27 @@ class AnalyserConstraint {
 
     public function promoteNumbers(solver: AnalyserSolver): Void {
         if (a.isNumericalType() && b.isNumericalType()) {
-            var promoted: AnalyserType;
-            if (a.equals(TFloat64) || b.equals(TFloat64)) {
-                promoted = TFloat64;
-            } else if ((a.equals(TFloat32) && b.equals(TInt64)) || (a.equals(TInt64) && b.equals(TFloat32))) {
-                promoted = TFloat64;
-            } else if (a.equals(TInt64) || b.equals(TInt64)) {
-                promoted = TInt64;
-            } else if (a.equals(TFloat32) || b.equals(TFloat32)) {
-                promoted = TFloat32;
-            } else {
-                promoted = TInt32;
+            var promoted: AnalyserType = null;
+            var promotionResults: Array<{ a: AnalyserType, b: AnalyserType, result: AnalyserType }> = [
+                { a: TInt32, b: TInt64, result: TInt64 },
+                { a: TInt32, b: TFloat32, result: TFloat32 },
+                { a: TInt32, b: TFloat64, result: TFloat64 },
+                { a: TInt64, b: TFloat32, result: TFloat64 },
+                { a: TInt64, b: TFloat64, result: TFloat64 },
+                { a: TFloat32, b: TFloat64, result: TFloat64 }
+            ];
+
+            for (i in 0...promotionResults.length) {
+                var result = promotionResults[i];
+                if (a.equals(result.a) && b.equals(result.b)) {
+                    promoted = result.result;
+                    break;
+                }
+
+                if (a.equals(result.b) && b.equals(result.a)) {
+                    promoted = result.result;
+                    break;
+                }
             }
 
             a.setType(promoted);
@@ -56,7 +67,17 @@ class AnalyserConstraint {
 
         if (!a.equals(b)) {
             if (a.isNumericalType() && b.isNumericalType()) {
-                promoteNumbers(solver); // TODO: needs fixing up, may change user defined types... not supposed to happen!!
+                promoteNumbers(solver);
+                return true;
+            }
+
+            if (a.isVoidPointer() && b.isPointer()) {
+                a.setType(b);
+                return true;
+            }
+
+            if (a.isPointer() && b.isVoidPointer()) {
+                b.setType(a);
                 return true;
             }
 
@@ -74,6 +95,16 @@ class AnalyserConstraint {
         }
 
         return true;
+    }
+
+    public function tryCast(solver: AnalyserSolver): Bool {
+        var path = solver.analyser.findCastPath(node.analysisScope, b, a);
+        if (path.length > 0) {
+            solver.analyser.castNode(node, path);
+            return true;
+        }
+
+        return false;
     }
 
     public function fail(solver: AnalyserSolver): Void {

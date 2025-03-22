@@ -1,59 +1,7 @@
-need "io"
-
-class Test {
-    var hi: CString;
-
-    func Test(): Void {
-        println("new");
-    }
-
-    func hello(name: CString): Void {
-        println("hello");
-        println(name);
-    }
+func main(): Pointer<Int32> {
+    return test(1);
 }
 
-func main(): Void {
-    println("ello!")
+func test(a): Int32 {
+    return a;
 }
-
-// need "io"
-//
-// class Vehicle extends Test {
-//     var brand: CString;
-//     var model: Int32;
-//
-//     func Vehicle(brand: CString, model: CString) {
-//         $brand = brand;
-//         $model = model;
-//     }
-//
-//     func getBrand(): CString {
-//         return $brand;
-//     }
-//
-//     func getModel(): CString {
-//         return $model;
-//     }
-//
-//     func start(): Void {
-//         println("Vehicle is going");
-//     }
-// }
-//
-// class Car extends Vehicle {
-//     var year: Int32;
-//
-//     func Car(brand: CString, model: CString, year: Int32) {
-//         super(brand, model);
-//         $year = year;
-//     }
-//
-//     func getYear(): Int {
-//         return $year;
-//     }
-//
-//     override func start(): Void {
-//         println("Car go vroooom!");
-//     }
-// }

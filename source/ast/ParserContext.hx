@@ -266,7 +266,7 @@ class ParserContext {
 
         // return type
         if (hasNextOfType(TokenType.Colon)) {
-            var returnTypeToken: Token = next(1);
+            var returnTypeToken: Token = getTypeToken(1);
             var returnTypeNode: Node = {
                 type: NodeType.FunctionDeclReturnType,
                 value: returnTypeToken.value,
@@ -331,6 +331,39 @@ class ParserContext {
         addNode(funcNode);
     }
 
+    public function getTypeToken(skip: Int): Token {
+        // "Hello World" = "Hello"
+        // "Pointer<A, B>" = "Pointer<A, B>"
+        // "Int64" = "Int64"
+
+        var depth = 0;
+        var first: Bool = true;
+        var value = "";
+        _idx += skip;
+
+        while (depth != 0 || first) {
+            var next = next();
+            var peek = peekNext();
+
+            if (peek.type == TokenType.Less) {
+                depth++;
+            } else if (next.type == TokenType.Greater) {
+                depth--;
+            }
+
+            value += next.value;
+            first = false;
+        }
+
+        return {
+            type: TokenType.Identifier,
+            value: value,
+            line: _tokens[_idx].line,
+            column: _tokens[_idx].column,
+            index: _tokens[_idx].index
+        };
+    }
+
     public function extractPosFromChildren(node: Node, includeNode: Bool = false) {
         if (node.children.length <= 0) return;
 
@@ -368,7 +401,7 @@ class ParserContext {
 
         if (hasNextOfType(TokenType.Colon)) {
             if (!hasNextOfType(TokenType.Identifier, 1)) return;
-            var typeToken: Token = next(1);
+            var typeToken: Token = getTypeToken(1);
             var typeNode: Node = {
                 type: NodeType.VarType,
                 value: typeToken.value,
