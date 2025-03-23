@@ -23,6 +23,18 @@ class AnalyserConstraintEither extends AnalyserConstraint {
         return optional;
     }
 
+    override public function tryCast(solver: AnalyserSolver): Bool {
+        for (allowed in allowedTypes) {
+            var path = solver.analyser.findCastPath(node.analysisScope, type, allowed);
+            if (path.length > 0) {
+                solver.analyser.castNode(node, path);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     override public function fail(solver: AnalyserSolver): Void {
         solver.analyser.emitError(node, ErrorType.TypeMismatch, 'Expected one of [${allowedTypes.map(t -> t.toString()).join(", ")}] but got ${type.toString()}');
     }

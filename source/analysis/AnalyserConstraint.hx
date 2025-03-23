@@ -55,13 +55,13 @@ class AnalyserConstraint {
 
         if (a.isUnknown() && !b.isUnknown()) {
             a.setType(b);
-            a.setHintStatus(optional);
+            a.setHintStatus(optional || b.isHint());
             return true;
         }
 
         if (!a.isUnknown() && b.isUnknown()) {
             b.setType(a);
-            b.setHintStatus(optional);
+            b.setHintStatus(optional || a.isHint());
             return true;
         }
 
@@ -83,11 +83,13 @@ class AnalyserConstraint {
 
             if (a.isHint()) {
                 a.setType(b);
+                a.setHintStatus(optional || b.isHint());
                 return true;
             }
 
             if (b.isHint()) {
                 b.setType(a);
+                b.setHintStatus(optional || a.isHint());
                 return true;
             }
 
@@ -112,7 +114,7 @@ class AnalyserConstraint {
     }
 
     public function toString(): String {
-        return '${a.toString()} == ${b.toString()}';
+        return '${a.toString()} == ${b.toString()}' + (node != null ? ' at "${node.type} ${node.value}"' : '');
     }
 
 }

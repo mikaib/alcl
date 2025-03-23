@@ -1,7 +1,23 @@
 func main(): Pointer<Int32> {
-    return test(1);
+    var a: Int32 = test(3);
+    var b: Pointer<Int32> = a;
+    var c: Int32 = 3;
+    var d: Pointer<Int32> = c;
+
+    var res: Int32 = a + b + c + d;
+    return res;
 }
 
 func test(a): Int32 {
     return a;
+}
+
+func cool(a: Pointer<Int32>, b: Pointer<Int32>): Int32 {
+    return a + b;
+}
+
+func abc() {
+    var a: Int32 = 3;
+    var b: Pointer<Int32> = a;
+    return b * 2;
 }

@@ -17,6 +17,7 @@ class AnalyserSolver {
 
     public function solveWith(constraints: Array<AnalyserConstraint>): Void {
         var changed: Bool = true;
+        var showHints: Bool = false;
         var toRemove: Array<AnalyserConstraint> = [];
 
         while (changed) {
@@ -26,6 +27,7 @@ class AnalyserSolver {
             });
 
             for (constraint in constraints) {
+                if (constraint.optional && !showHints) continue;
                 if (constraint.solve(this)) {
                     toRemove.push(constraint);
                 }
@@ -37,19 +39,13 @@ class AnalyserSolver {
             }
 
             toRemove.resize(0);
-        }
-    }
 
-    public function solve(): Bool {
-        var constraints: Array<AnalyserConstraint> = _constraints.copy();
-
-        // Pass 1: Solve all constraints that can be solved immediately
-        solveWith(constraints);
-        if (constraints.length <= 0) {
-            return true;
+            if (!changed && !showHints) {
+                showHints = true;
+                changed = true;
+            }
         }
 
-        // Pass 2: Try to cast any remaining constraints
         var _toRemove: Array<AnalyserConstraint> = [];
         for (constraint in constraints) {
             var solved: Bool = constraint.tryCast(this);
@@ -62,6 +58,15 @@ class AnalyserSolver {
             constraints.remove(constraint);
         }
 
+        if (_toRemove.length > 0) {
+            solveWith(constraints);
+        }
+    }
+
+    public function solve(): Bool {
+        var constraints: Array<AnalyserConstraint> = _constraints.copy();
+
+        solveWith(constraints);
         if (constraints.length <= 0) {
             return true;
         }

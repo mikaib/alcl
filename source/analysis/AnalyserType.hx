@@ -6,6 +6,7 @@ class AnalyserType {
     private var _type: Null<String>;
     private var _params: Array<AnalyserType>;
     private var _isHint: Bool;
+    private var _copiedFrom: Null<AnalyserType>;
     private var _onChangeCallbacks: Array<Void->Void>;
 
     private var _id: Int;
@@ -135,6 +136,7 @@ class AnalyserType {
 
     public function setType(type: AnalyserType): Void {
         if (!type.isUnknown()) setTypeStr(type._type);
+        setCopiedFrom(type);
         copyParamsFrom(type);
     }
 
@@ -142,6 +144,10 @@ class AnalyserType {
         if (_type == null) {
             setType(type);
         }
+    }
+
+    public function setCopiedFrom(type: AnalyserType): Void {
+        _copiedFrom = type;
     }
 
     public function isUnknown(): Bool {
@@ -232,7 +238,15 @@ class AnalyserType {
     }
 
     public function toDebugString(): String {
-        return '${toString()} (#$_id)';
+        return '${toString()} (#$_id)'; // + (if (_copiedFrom != null) ' copied from ${_copiedFrom.toDebugString()}' else '');
+    }
+
+    public function getId(): Int {
+        return _id;
+    }
+
+    public function getCopiedFrom(): Null<AnalyserType> {
+        return _copiedFrom;
     }
 
     @:to

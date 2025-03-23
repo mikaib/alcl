@@ -252,7 +252,7 @@ class ParserContext {
             // type
             if (!groupCtx.hasNextOfType(TokenType.Colon)) continue;
             if (!groupCtx.hasNextOfType(TokenType.Identifier, 1)) continue;
-            var type: Token = groupCtx.next(1);
+            var type: Token = groupCtx.getTypeToken(1);
             var typeNode = createNode(
                 NodeType.FunctionDeclParamType,
                 paramGroup[0],
@@ -345,7 +345,11 @@ class ParserContext {
             var next = next();
             var peek = peekNext();
 
-            if (peek.type == TokenType.Less) {
+            if (next == null) {
+                break;
+            }
+
+            if (peek != null && peek.type == TokenType.Less) {
                 depth++;
             } else if (next.type == TokenType.Greater) {
                 depth--;
@@ -544,11 +548,13 @@ class ParserContext {
             var leftNode = createNode(NodeType.OperationLeft);
             leftNode.children.push(left);
             left.parent = leftNode;
+            leftNode.parent = binaryNode;
             extractPosFromChildren(leftNode);
 
             var rightNode = createNode(NodeType.OperationRight);
             rightNode.children.push(right);
             right.parent = rightNode;
+            rightNode.parent = binaryNode;
             extractPosFromChildren(rightNode);
 
             binaryNode.children.push(leftNode);

@@ -1,7 +1,10 @@
 ### todo:
+- add temp vars
+- make division always float
 - assert_type and log_type meta tags
 - inline meta
 - import as
+- tuples
 - namespaces
 - link lib math on linux
 - conditional compilation

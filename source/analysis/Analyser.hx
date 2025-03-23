@@ -327,7 +327,7 @@ class Analyser {
                         emitError(node, ErrorType.UninitializedVariable, 'uninitialized variable ${node.value}');
                     }
 
-                    addTypeConstraint(node, variable.type, node.analysisType, USER);
+                    addTypeConstraint(node, node.analysisType, variable.type, USER);
                 }
 
             case NodeType.IfStatementElse:
@@ -342,15 +342,16 @@ class Analyser {
                 var left = findChildOfType(node, NodeType.OperationLeft);
                 var right = findChildOfType(node, NodeType.OperationRight);
                 mustHaveExactChildrenAmount(node, 2);
-                addTypeConstraint(right.children[0], left?.analysisType, right?.analysisType, INFERENCE); // Ensure we are comparing the same thing
 
                 if (_compareOps.indexOf(node.value) != -1) {
                     addTypeConstraint(node, TBool, node.analysisType, INFERENCE);
                 } else {
-                    addNumericalTypeConstraint(node, node.analysisType, INFERENCE);
-                    addTypeConstraint(left.children[0], node.analysisType, left?.analysisType, INFERENCE);
+                    addNumericalTypeConstraint(left.children[0], left?.children[0]?.analysisType, INFERENCE);
+                    addNumericalTypeConstraint(right.children[0], right?.children[0]?.analysisType, INFERENCE);
+                    addTypeConstraint(left.children[0], node.analysisType, left?.children[0]?.analysisType, INFERENCE);
                 }
 
+                addTypeConstraint(right.children[0], left?.analysisType, right?.analysisType, INFERENCE); // Ensure we are comparing the same thing
                 addTypeHint(node, TInt32, left?.analysisType);
                 addTypeHint(node, TInt32, right?.analysisType);
 
@@ -464,9 +465,10 @@ class Analyser {
 
         return true;
     }
+
     public function copyTypeFromFirstChild(node: Node): Void {
         if (node.children.length > 0) {
-            addTypeConstraint(node.children[0], node.analysisType, node.children[0].analysisType, INFERENCE);
+            addTypeConstraint(node.children[0], node.analysisType, node.children[0].analysisType, COPY);
         }
     }
 
@@ -550,12 +552,28 @@ class Analyser {
         return [];
     }
 
+    public function updateCopies(node: Node, from: AnalyserType, to: AnalyserType): Void {
+        var parent = node.parent;
+
+        while (parent != null) {
+            if (from.getId() == 1640) {
+                trace(parent.type, parent.value, parent.analysisType);
+            }
+
+            if (parent.analysisType != null && parent.analysisType.getCopiedFrom()?.getId() == from.getId()) {
+                parent.analysisType.setType(to);
+                updateCopies(parent, parent.analysisType, to);
+            }
+
+            parent = parent.parent;
+        }
+    }
     public function castNode(node: Node, path: Array<AnalyserCastMethod>): Void {
         for (c in path) {
-            var og = node.deepCopy();
+            var og = node.deepCopy(true, true);
             node.children = [];
             node.value = c.getTo().toString();
-            node.analysisType = c.getTo();
+            node.analysisType = c.getTo().toMutableType();
             node.children.push(og);
 
             if (c.isUsingCast()) node.type = NodeType.Cast;
@@ -571,6 +589,7 @@ class Analyser {
             }
 
             og.parent = node;
+            updateCopies(og, og.analysisType, node.analysisType);
 
             for (idx in 0..._toRemapCalls.length) {
                 if (_toRemapCalls[idx].node == node) {
@@ -578,7 +597,6 @@ class Analyser {
                 }
             }
         }
-
     }
 
     public function nodeIsConstant(node: Node): Bool {
