@@ -24,9 +24,14 @@ class AnalyserConstraintEither extends AnalyserConstraint {
     }
 
     override public function tryCast(solver: AnalyserSolver): Bool {
+        if (solve(solver)) {
+            return true;
+        }
+
         for (allowed in allowedTypes) {
             var path = solver.analyser.findCastPath(node.analysisScope, type, allowed);
             if (path.length > 0) {
+                // Sys.println('    - casting ${type.toString()} to ${allowed.toString()} because it doesnt match any of the allowed types [${allowedTypes.map(t -> t.toString()).join(", ")}]');
                 solver.analyser.castNode(node, path);
                 return true;
             }

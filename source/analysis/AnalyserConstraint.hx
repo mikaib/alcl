@@ -100,8 +100,13 @@ class AnalyserConstraint {
     }
 
     public function tryCast(solver: AnalyserSolver): Bool {
+        if (solve(solver)) {
+            return true;
+        }
+
         var path = solver.analyser.findCastPath(node.analysisScope, b, a);
         if (path.length > 0) {
+            // Sys.println('    - casting ${b.toString()} to ${a.toString()} because it didn\'t match the ${node.type}, using path ${path}');
             solver.analyser.castNode(node, path);
             return true;
         }

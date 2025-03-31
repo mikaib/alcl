@@ -26,7 +26,9 @@ class AnalyserSolver {
                 return b.priority - a.priority;
             });
 
+            // Sys.println("---------------------------------------------");
             for (constraint in constraints) {
+                // Sys.println(constraint);
                 if (constraint.optional && !showHints) continue;
                 if (constraint.solve(this)) {
                     toRemove.push(constraint);

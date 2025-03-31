@@ -1,5 +1,4 @@
 #ctype CString "char*"
-#ctype CVoidPtr "void*"
 #ctype CSizeT "size_t"
 #ctype Int32 "int"
 #ctype Int64 "long long"
@@ -11,6 +10,6 @@
 #no_remap
 #native_function
 #native_header "stdlib.h"
-func alcl_gc_alloc(size: CSizeT): CVoidPtr {
+func alcl_gc_alloc(size: CSizeT): Pointer<Void> {
     return malloc(size);
 }

@@ -504,14 +504,14 @@ class Printer {
 
         if (vars.length > 0) {
             for (v in vars) {
-                classCode += '    ptr->this->${v.value} = 0;\n';
+                var varValue = findChildOfType(v, NodeType.VarValue);
+                classCode += '    ptr->this->${v.value} = ${varValue != null ? printChildren(varValue, true) : "0"};\n';
             }
         }
 
         classCode += '    ptr->vtable = &__alcl_vtable_${node.value}_impl;\n';
 
         if (hasConstructor) {
-            trace(callParams);
             var paramStr = 'ptr->this, ${callParams}';
             classCode += '    __alcl_method_${node.value}_${node.value}(${paramStr.substr(0, paramStr.length - 2)});\n';
         }
