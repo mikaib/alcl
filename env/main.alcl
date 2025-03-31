@@ -9,6 +9,6 @@ func main(): Pointer<Int32> {
     var d: Pointer<Int32> = c;
     var e: Pointer<Int32> = malloc(4);
 
-    var res: Int32 = a + b * c + d / e;
+    var res: Int32 = a + (b * c) + d / (b * (e - c) + e);
     return res;
 }
