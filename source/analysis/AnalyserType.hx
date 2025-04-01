@@ -7,6 +7,7 @@ class AnalyserType {
     private var _params: Array<AnalyserType>;
     private var _isHint: Bool;
     private var _copiedFrom: Null<AnalyserType>;
+    private var _copiesFrom: Array<AnalyserType>;
     private var _onChangeCallbacks: Array<Void->Void>;
 
     private var _id: Int;
@@ -36,6 +37,7 @@ class AnalyserType {
         _params = [];
         _id = _count++;
         _isHint = false;
+        _copiesFrom = [];
     }
 
     public function isHint(): Bool {
@@ -96,6 +98,10 @@ class AnalyserType {
         for (cb in _onChangeCallbacks) {
             cb();
         }
+
+        for (copy in _copiesFrom) {
+            copy.setType(this);
+        }
     }
 
     private function parseTypeParams(paramsStr: String): Array<String> {
@@ -147,7 +153,12 @@ class AnalyserType {
     }
 
     public function setCopiedFrom(type: AnalyserType): Void {
+        if (_copiedFrom != null) {
+            _copiedFrom._copiesFrom.remove(this);
+        }
+
         _copiedFrom = type;
+        type._copiesFrom.push(this);
     }
 
     public function isUnknown(): Bool {
@@ -238,7 +249,7 @@ class AnalyserType {
     }
 
     public function toDebugString(): String {
-        return '${toString()} (#$_id)'; // + (if (_copiedFrom != null) ' copied from ${_copiedFrom.toDebugString()}' else '');
+        return '${toString()} (#$_id) (copies: ${_copiesFrom.map(t -> t.getId()).join(", ")})'; // + (if (_copiedFrom != null) ' copied from ${_copiedFrom.toDebugString()}' else '');
     }
 
     public function getId(): Int {

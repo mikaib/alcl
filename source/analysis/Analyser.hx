@@ -19,8 +19,10 @@ class Analyser {
     private var _project: ProjectData;
     private var _toRemapDecls: Array<AnalyserFunction> = [];
     private var _toRemapCalls: Array<{ node: Node, func: AnalyserFunction }> = [];
+    private var _tmpCount: Int;
 
     private var _compareOps: Array<String> = ["||", "&&", "|", "^", "&", "==", "!=", "<", "<=", ">", ">=", "!", "~"];
+    private var _codeBodies: Array<NodeType> = [NodeType.FunctionDeclBody, NodeType.IfStatementBody, NodeType.WhileLoopBody, NodeType.ForLoopBody];
     private var TCSizeT: AnalyserFixedType = AnalyserType.createFixedType("CSizeT");
     private var TInt32: AnalyserFixedType = AnalyserType.createFixedType("Int32");
     private var TInt64: AnalyserFixedType = AnalyserType.createFixedType("Int64");
@@ -38,6 +40,7 @@ class Analyser {
         _file = file ?? "Internal";
         _mainScope = new AnalyserScope(this);
         _project = project;
+        _tmpCount = 0;
     }
 
     public function getFile(): String {
@@ -327,7 +330,10 @@ class Analyser {
                         emitError(node, ErrorType.UninitializedVariable, 'uninitialized variable ${node.value}');
                     }
 
-                    addTypeConstraint(node, node.analysisType, variable.type, USER);
+                    addTypeConstraint(node, node.analysisType, variable.type, INFERENCE);
+                    variable.type.onTypeChange(() -> {
+                        node.analysisType.setType(variable.type);
+                    })
                 }
 
             case NodeType.IfStatementElse:
@@ -348,7 +354,8 @@ class Analyser {
                 } else {
                     addNumericalTypeConstraint(left.children[0], left?.children[0]?.analysisType, INFERENCE);
                     addNumericalTypeConstraint(right.children[0], right?.children[0]?.analysisType, INFERENCE);
-                    addTypeConstraint(left.children[0], node.analysisType, left?.children[0]?.analysisType, INFERENCE);
+                    // addTypeConstraint(left.children[0], node.analysisType, left?.children[0]?.analysisType, INFERENCE);
+                    copyTypeFromFirstChild(node);
                 }
 
                 addTypeConstraint(right.children[0], left?.analysisType, right?.analysisType, INFERENCE); // Ensure we are comparing the same thing
@@ -466,9 +473,24 @@ class Analyser {
         return true;
     }
 
+    public function copyTypeFromNode(copyFrom: Node, with: Node) {
+        addTypeConstraint(with, copyFrom.analysisType, with.analysisType, COPY);
+        copyFrom.analysisType.onTypeChange(() -> {
+            with.analysisType.setType(copyFrom.analysisType);
+        });
+    }
+
     public function copyTypeFromFirstChild(node: Node): Void {
         if (node.children.length > 0) {
             addTypeConstraint(node.children[0], node.analysisType, node.children[0].analysisType, COPY);
+        }
+    }
+
+    public function copyTypeFromFirstChildStrict(node: Node): Void {
+        if (node.children.length > 0) {
+            copyTypeFromNode(node.children[0], node);
+        } else {
+            emitError(node, ErrorType.SyntaxError, 'missing child');
         }
     }
 
@@ -568,33 +590,88 @@ class Analyser {
             parent = parent.parent;
         }
     }
+
+    public function getWritableParentOf(node: Node): { node: Node, idx: Int } {
+        var parent: Node = node.parent;
+        var idx: Int = parent.children.indexOf(node);
+
+        while (parent != null && !_codeBodies.contains(parent.type)) {
+            var prevParent = parent;
+            parent = parent.parent;
+            idx = parent.children.indexOf(prevParent);
+        }
+
+        return { node: parent, idx: idx };
+    }
+
+    public function assignTempId(): Int {
+        return _tmpCount++;
+    }
+
+    public function extractToTempVar(actualNode: Node, shouldCopy: Bool = false): Node {
+        var tmpId: Int = assignTempId();
+        var node: Node = actualNode;
+        if (shouldCopy) {
+            node = actualNode.deepCopy(true, false);
+        }
+
+        var funcBody = getWritableParentOf(node);
+        var extractTo: Node = funcBody.node;
+        var extractToPos: Int = funcBody.idx;
+
+        var varNode: Node = createNode(NodeType.VarDef, extractTo, null, null, '__alcl_tmp_$tmpId');
+        varNode.analysisType = node.analysisType;
+        varNode.analysisScope = node.analysisScope;
+        extractTo.children.insert(extractToPos, varNode);
+
+        var varValue: Node = createNode(NodeType.VarValue, varNode);
+        varValue.analysisType = varNode.analysisType;
+        varValue.analysisScope = varNode.analysisScope;
+        varValue.children.push(node);
+        varNode.children.push(varValue);
+        node.parent = varValue;
+
+        var identifier = createNode(NodeType.Identifier, null, null, null, '__alcl_tmp_$tmpId');
+        identifier.analysisType = varNode.analysisType;
+        identifier.analysisScope = varNode.analysisScope;
+
+        swapRemapping(actualNode, node);
+        return identifier;
+    }
+
+    public function swapRemapping(from: Node, to: Node): Void {
+        for (idx in 0..._toRemapCalls.length) {
+            if (_toRemapCalls[idx].node == from) {
+                _toRemapCalls[idx].node = to;
+            }
+        }
+    }
+
     public function castNode(node: Node, path: Array<AnalyserCastMethod>): Void {
         for (c in path) {
-            var og = node.deepCopy(true, true);
+            var og = node.deepCopy(true, false);
+            var wasExtracted = false;
+
+            if ((c.isUsingFromPtr() || c.isUsingToPtr()) && (og.type != NodeType.Identifier)) {
+                // emitError(node, ErrorType.TypeCastError, 'only variables can be cast to/from pointers')
+                og = extractToTempVar(node, true);
+                wasExtracted = true;
+            }
+
             node.children = [];
             node.value = c.getTo().toString();
-            node.analysisType = c.getTo().toMutableType();
+            node.analysisType.setType(c.getTo());
             node.children.push(og);
 
             if (c.isUsingCast()) node.type = NodeType.Cast;
             else if (c.isUsingFromPtr()) node.type = NodeType.FromPtr;
             else if (c.isUsingToPtr()) node.type = NodeType.ToPtr;
 
-            if (nodeIsConstant(og) && node.type == NodeType.ToPtr) {
-                emitError(node, ErrorType.TypeCastError, 'cannot convert literal to pointer');
-            }
-
-            if ((node.type == NodeType.ToPtr || node.type == NodeType.FromPtr) && (og.type != NodeType.Identifier)) {
-                emitError(node, ErrorType.TypeCastError, 'only variables can be cast to/from pointers');
-            }
-
             og.parent = node;
             updateCopies(og, og.analysisType, node.analysisType);
 
-            for (idx in 0..._toRemapCalls.length) {
-                if (_toRemapCalls[idx].node == node) {
-                    _toRemapCalls[idx].node = og;
-                }
+            if (!wasExtracted) {
+                swapRemapping(node, og);
             }
         }
     }

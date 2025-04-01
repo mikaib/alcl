@@ -1,5 +1,6 @@
 package analysis;
 import errors.ErrorType;
+import ast.Node;
 
 class AnalyserSolver {
 

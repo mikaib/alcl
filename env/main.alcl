@@ -1,14 +1,14 @@
-#extern
-#native_header "stdio.h"
-func malloc(size: CSizeT): Pointer<Int32> {}
+func main(): Int32 {
+    var x: Pointer<Int32> = 10;
+    var y = test(x) + x;
 
-func main(): Pointer<Int32> {
-    var a: Int32 = 3;
-    var b: Pointer<Int32> = a;
-    var c: Int32 = 3;
-    var d: Pointer<Int32> = c;
-    var e: Pointer<Int32> = malloc(4);
+    return x * y;
+}
 
-    var res: Int32 = a + (b * c) + d / (b * (e - c) + e);
-    return res;
+func cool(z) {
+    return z;
+}
+
+func test(w: Int32) {
+    return cool(w);
 }
